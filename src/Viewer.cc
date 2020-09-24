@@ -162,10 +162,10 @@ bool Viewer::ParseViewerParamFile(cvsl::Camera *pCamera, cvsl::Parameter &param)
     mImageWidth = pCamera->width();
     mImageHeight = pCamera->height();
 
-    param.get<float>("orbslam3.viewer.viewpoint.x", mViewpointX);
-    param.get<float>("orbslam3.viewer.viewpoint.y", mViewpointX);
-    param.get<float>("orbslam3.viewer.viewpoint.z", mViewpointX);
-    param.get<float>("orbslam3.viewer.viewpoint.f", mViewpointX);
+    param.get<float>("sys.viewer.viewpoint.x", mViewpointX);
+    param.get<float>("sys.viewer.viewpoint.y", mViewpointX);
+    param.get<float>("sys.viewer.viewpoint.z", mViewpointX);
+    param.get<float>("sys.viewer.viewpoint.f", mViewpointX);
 
     return true;
 }

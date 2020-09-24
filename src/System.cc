@@ -231,7 +231,7 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
         params.set<int>("orbslam3.sensor", 2);
     }
 
-    mSensor = (eSensor) params.get<int>("orbslam3.sensor");
+    mSensor = (eSensor) params.get<int>("sys.sensor");
 
     // Output welcome message
     cout << endl <<
@@ -261,11 +261,11 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
 
     mpVocabulary = new ORBVocabulary();
-    bool bVocLoad = mpVocabulary->loadFromTextFile(params.get<std::string>("orbslam3.vocabulary"));
+    bool bVocLoad = mpVocabulary->loadFromTextFile(params.get<std::string>("sys.vocabulary"));
     if(!bVocLoad)
     {
         cerr << "Wrong path to vocabulary. " << endl;
-        cerr << "Falied to open at: " << params.get<std::string>("orbslam3.vocabulary") << endl;
+        cerr << "Falied to open at: " << params.get<std::string>("sys.vocabulary") << endl;
         exit(-1);
     }
     cout << "Vocabulary loaded!" << endl << endl;
@@ -363,7 +363,8 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     // mpLocalMapper->mInitFr = initFr;
     mpLocalMapper->mInitFr = false;
     // mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
-    mpLocalMapper->mThFarPoints = params.get<float>("orbslam3.thFarPoints");
+    mpLocalMapper->mThFarPoints = 0;
+    params.get<float>("sys.thFarPoints", mpLocalMapper->mThFarPoints);
     if(mpLocalMapper->mThFarPoints!=0)
     {
         cout << "Discard points further than " << mpLocalMapper->mThFarPoints << " m from current camera" << endl;
@@ -378,7 +379,7 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
 
     //Initialize the Viewer thread and launch
-    if(params.get<int>("orbslam3.viewer"))
+    if(params.get<int>("sys.viewer"))
     {
         mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, pCamera, params);
         mptViewer = new thread(&Viewer::Run, mpViewer);

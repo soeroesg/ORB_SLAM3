@@ -167,7 +167,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
     mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpAtlas(pAtlas), mnLastRelocFrameId(0), time_recently_lost(5.0),
     mnInitialFrameId(0), mbCreatedMap(false), mnFirstFrameId(0), mpCamera2(nullptr)
 {
-    params.get<int>("orbslam3.sensor", mSensor);
+    params.get<int>("sys.sensor", mSensor);
 
     bool b_parse_cam = ParseCamParamFile(pCamera);
     if(!b_parse_cam)

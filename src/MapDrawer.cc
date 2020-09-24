@@ -143,12 +143,12 @@ bool MapDrawer::ParseViewerParamFile(cv::FileStorage &fSettings)
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
 bool MapDrawer::ParseViewerParamFile(cvsl::Parameter &param)
 {
-    param.get<float>("orbslam3.viewer.keyframe.size", mKeyFrameSize);
-    param.get<float>("orbslam3.viewer.keyframe.linewidth", mKeyFrameLineWidth);
-    param.get<float>("orbslam3.viewer.graph.linewidth", mGraphLineWidth);
-    param.get<float>("orbslam3.viewer.point.size", mPointSize);
-    param.get<float>("orbslam3.viewer.camera.size", mCameraSize);
-    param.get<float>("orbslam3.viewer.camera.linewidth", mCameraLineWidth);
+    param.get<float>("sys.viewer.keyframe.size", mKeyFrameSize);
+    param.get<float>("sys.viewer.keyframe.linewidth", mKeyFrameLineWidth);
+    param.get<float>("sys.viewer.graph.linewidth", mGraphLineWidth);
+    param.get<float>("sys.viewer.point.size", mPointSize);
+    param.get<float>("sys.viewer.camera.size", mCameraSize);
+    param.get<float>("sys.viewer.camera.linewidth", mCameraLineWidth);
     return true;
 }
 #endif
