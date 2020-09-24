@@ -27,7 +27,7 @@
 #include <string>
 #include <thread>
 #ifndef WIN32
-  #include <unistd.h>
+#include <unistd.h>
 #endif
 
 #include <opencv2/core/core.hpp>
@@ -43,6 +43,11 @@
 #include "Viewer.h"
 #include "ImuTypes.h"
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/core/cvsl_agent.h>
+#include <cvsl/core/cvsl_camera.h>
+#include <cvsl/core/cvsl_parameter.h>
+#endif
 
 namespace ORB_SLAM3
 {
@@ -81,7 +86,11 @@ class Tracking;
 class LocalMapping;
 class LoopClosing;
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+class System : public cvsl::Agent
+#else
 class System
+#endif
 {
 public:
     // Input sensor
@@ -103,6 +112,13 @@ public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
     System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true, const int initFr = 0, const string &strSequence = std::string(), const string &strLoadingFile = std::string());
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    System(cvsl::Parameter& params, cvsl::Camera* pCamera);
+
+    cv::Mat Track(cvsl::Frame &f);
+    cv::Mat GetPose();
+#endif
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.

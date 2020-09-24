@@ -18,10 +18,13 @@
 
 #include "TwoViewReconstruction.h"
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/DBoW2/Random.h>
+#else
 #include "Thirdparty/DBoW2/DUtils/Random.h"
+#endif
 
 #include<thread>
-
 
 using namespace std;
 namespace ORB_SLAM3

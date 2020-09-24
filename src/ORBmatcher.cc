@@ -24,7 +24,11 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/DBoW2/FeatureVector.h>
+#else
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
+#endif
 
 using namespace std;
 

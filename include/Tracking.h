@@ -43,6 +43,10 @@
 #include <mutex>
 #include <unordered_set>
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/core/cvsl_camera.h>
+#endif
+
 namespace ORB_SLAM3
 {
 
@@ -60,12 +64,23 @@ public:
     Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Atlas* pAtlas,
              KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor, const string &_nameSeq=std::string());
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Atlas* pAtlas,
+             KeyFrameDatabase* pKFDB, cvsl::Camera* pCamera, cvsl::Parameter& params);
+#endif
+
     ~Tracking();
 
     // Parse the config file
     bool ParseCamParamFile(cv::FileStorage &fSettings);
     bool ParseORBParamFile(cv::FileStorage &fSettings);
     bool ParseIMUParamFile(cv::FileStorage &fSettings);
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    bool ParseCamParamFile(cvsl::Camera* pCamera);
+    bool ParseORBParamFile(cvsl::Parameter& param);
+    bool ParseIMUParamFile(cvsl::Parameter& param);
+#endif
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp, string filename);

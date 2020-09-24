@@ -31,7 +31,13 @@
 #include <boost/algorithm/string.hpp>
 #include <thread>
 #include <mutex>
+#include <map>
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <g2o/types/sim3/types_seven_dof_expmap.h>
+#else
 #include "Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
+#endif
 
 namespace ORB_SLAM3
 {
@@ -46,9 +52,8 @@ class LoopClosing
 {
 public:
 
-    typedef pair<set<KeyFrame*>,int> ConsistentGroup;    
-    typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
-        Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
+    typedef std::pair<set<KeyFrame*>,int> ConsistentGroup;
+    typedef std::map<KeyFrame*, g2o::Sim3, std::less<KeyFrame*>, Eigen::aligned_allocator<std::pair<KeyFrame* const, g2o::Sim3> > > KeyFrameAndPose;
 
 public:
 
@@ -76,7 +81,7 @@ public:
     bool isFinishedGBA(){
         unique_lock<std::mutex> lock(mMutexGBA);
         return mbFinishedGBA;
-    }   
+    }
 
     void RequestFinish();
 
@@ -86,9 +91,9 @@ public:
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-protected:
+    protected:
 
-    bool CheckNewKeyFrames();
+        bool CheckNewKeyFrames();
 
 
     //Methods to implement the new place recognition algorithm
@@ -96,9 +101,9 @@ protected:
     bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3 &gScw, int &nNumProjMatches,
                                         std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
     bool DetectCommonRegionsFromBoW(std::vector<KeyFrame*> &vpBowCand, KeyFrame* &pMatchedKF, KeyFrame* &pLastCurrentKF, g2o::Sim3 &g2oScw,
-                                     int &nNumCoincidences, std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
+                                    int &nNumCoincidences, std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
     bool DetectCommonRegionsFromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF, g2o::Sim3 &gScw, int &nNumProjMatches,
-                                            std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
+                                       std::vector<MapPoint*> &vpMPs, std::vector<MapPoint*> &vpMatchedMPs);
     int FindMatchesByProjection(KeyFrame* pCurrentKF, KeyFrame* pMatchedKFw, g2o::Sim3 &g2oScw,
                                 set<MapPoint*> &spMatchedMPinOrigin, vector<MapPoint*> &vpMapPoints,
                                 vector<MapPoint*> &vpMatchedMapPoints);
@@ -193,10 +198,7 @@ protected:
     // Fix scale in the stereo/RGB-D case
     bool mbFixScale;
 
-
-    bool mnFullBAIdx;
-
-
+    int mnFullBAIdx;
 
     vector<double> vdPR_CurrentTime;
     vector<double> vdPR_MatchedTime;

@@ -27,6 +27,10 @@
 
 #include <mutex>
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/core/cvsl_camera.h>
+#endif
+
 namespace ORB_SLAM3
 {
 
@@ -39,6 +43,10 @@ class Viewer
 {
 public:
     Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Tracking *pTracking, const string &strSettingPath);
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    Viewer(System* pSystem, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Tracking *pTracking, cvsl::Camera* pCamera, cvsl::Parameter& param);
+#endif
 
     // Main thread function. Draw points, keyframes, the current camera pose and the last processed
     // frame. Drawing is refreshed according to the camera fps. We use Pangolin.
@@ -62,6 +70,10 @@ public:
 private:
 
     bool ParseViewerParamFile(cv::FileStorage &fSettings);
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    bool ParseViewerParamFile(cvsl::Camera* pCamera, cvsl::Parameter& param);
+#endif
 
     bool Stop();
 
@@ -94,5 +106,5 @@ private:
 
 
 #endif // VIEWER_H
-	
+
 

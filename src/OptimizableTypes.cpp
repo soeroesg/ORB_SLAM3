@@ -221,7 +221,11 @@ namespace ORB_SLAM3 {
 
     bool VertexSim3Expmap::read(std::istream& is)
     {
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+        g2o::Vector7 cam2world;
+#else
         g2o::Vector7d cam2world;
+#endif
         for (int i=0; i<6; i++){
             is >> cam2world[i];
         }
@@ -245,7 +249,11 @@ namespace ORB_SLAM3 {
     bool VertexSim3Expmap::write(std::ostream& os) const
     {
         g2o::Sim3 cam2world(estimate().inverse());
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+        g2o::Vector7 lv=cam2world.log();
+#else
         g2o::Vector7d lv=cam2world.log();
+#endif
         for (int i=0; i<7; i++){
             os << lv[i] << " ";
         }

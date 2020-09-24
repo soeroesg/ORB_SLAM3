@@ -27,7 +27,7 @@ namespace ORB_SLAM3
 {
 
 
-MapDrawer::MapDrawer(Atlas* pAtlas, const string &strSettingPath):mpAtlas(pAtlas)
+MapDrawer::MapDrawer(Atlas* pAtlas, const string &strSettingPath) : mpAtlas(pAtlas)
 {
     cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
 
@@ -46,6 +46,26 @@ MapDrawer::MapDrawer(Atlas* pAtlas, const string &strSettingPath):mpAtlas(pAtlas
         }
     }
 }
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+MapDrawer::MapDrawer(Atlas *pAtlas, cvsl::Parameter &params) : mpAtlas(pAtlas)
+{
+    bool is_correct = ParseViewerParamFile(params);
+
+    if(!is_correct)
+    {
+        std::cerr << "**ERROR in the config file, the format is not correct**" << std::endl;
+        try
+        {
+            throw -1;
+        }
+        catch(exception &e)
+        {
+
+        }
+    }
+}
+#endif
 
 bool MapDrawer::ParseViewerParamFile(cv::FileStorage &fSettings)
 {
@@ -119,6 +139,19 @@ bool MapDrawer::ParseViewerParamFile(cv::FileStorage &fSettings)
 
     return !b_miss_params;
 }
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+bool MapDrawer::ParseViewerParamFile(cvsl::Parameter &param)
+{
+    param.get<float>("orbslam3.viewer.keyframe.size", mKeyFrameSize);
+    param.get<float>("orbslam3.viewer.keyframe.linewidth", mKeyFrameLineWidth);
+    param.get<float>("orbslam3.viewer.graph.linewidth", mGraphLineWidth);
+    param.get<float>("orbslam3.viewer.point.size", mPointSize);
+    param.get<float>("orbslam3.viewer.camera.size", mCameraSize);
+    param.get<float>("orbslam3.viewer.camera.linewidth", mCameraLineWidth);
+    return true;
+}
+#endif
 
 void MapDrawer::DrawMapPoints()
 {

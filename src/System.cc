@@ -219,6 +219,207 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
 }
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
+    mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
+    mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
+{
+    if(pCamera->type() == cvsl::Camera::STEREO) {
+        params.set<int>("orbslam3.sensor", 1);
+    }
+    if(pCamera->type() == cvsl::Camera::RGBD) {
+        params.set<int>("orbslam3.sensor", 2);
+    }
+
+    mSensor = (eSensor) params.get<int>("orbslam3.sensor");
+
+    // Output welcome message
+    cout << endl <<
+    "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+    "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+    "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
+    "This is free software, and you are welcome to redistribute it" << endl <<
+    "under certain conditions. See LICENSE.txt." << endl << endl;
+
+    cout << "Input sensor was set to: ";
+
+    if(mSensor==MONOCULAR)
+        cout << "Monocular" << endl;
+    else if(mSensor==STEREO)
+        cout << "Stereo" << endl;
+    else if(mSensor==RGBD)
+        cout << "RGB-D" << endl;
+    else if(mSensor==IMU_MONOCULAR)
+        cout << "Monocular-Inertial" << endl;
+    else if(mSensor==IMU_STEREO)
+        cout << "Stereo-Inertial" << endl;
+
+    bool loadedAtlas = false;
+
+    //----
+    //Load ORB Vocabulary
+    cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+
+    mpVocabulary = new ORBVocabulary();
+    bool bVocLoad = mpVocabulary->loadFromTextFile(params.get<std::string>("orbslam3.vocabulary"));
+    if(!bVocLoad)
+    {
+        cerr << "Wrong path to vocabulary. " << endl;
+        cerr << "Falied to open at: " << params.get<std::string>("orbslam3.vocabulary") << endl;
+        exit(-1);
+    }
+    cout << "Vocabulary loaded!" << endl << endl;
+
+    //Create KeyFrame Database
+    mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
+
+    //Create the Atlas
+    //mpMap = new Map();
+    mpAtlas = new Atlas(0);
+    //----
+
+    /*if(strLoadingFile.empty())
+    {
+        //Load ORB Vocabulary
+        cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+
+        mpVocabulary = new ORBVocabulary();
+        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+        if(!bVocLoad)
+        {
+            cerr << "Wrong path to vocabulary. " << endl;
+            cerr << "Falied to open at: " << strVocFile << endl;
+            exit(-1);
+        }
+        cout << "Vocabulary loaded!" << endl << endl;
+
+        //Create KeyFrame Database
+        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
+
+        //Create the Atlas
+        //mpMap = new Map();
+        mpAtlas = new Atlas(0);
+    }
+    else
+    {
+        //Load ORB Vocabulary
+        cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
+
+        mpVocabulary = new ORBVocabulary();
+        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
+        if(!bVocLoad)
+        {
+            cerr << "Wrong path to vocabulary. " << endl;
+            cerr << "Falied to open at: " << strVocFile << endl;
+            exit(-1);
+        }
+        cout << "Vocabulary loaded!" << endl << endl;
+
+        cout << "Load File" << endl;
+
+        // Load the file with an earlier session
+        //clock_t start = clock();
+        bool isRead = LoadAtlas(strLoadingFile,BINARY_FILE);
+
+        if(!isRead)
+        {
+            cout << "Error to load the file, please try with other session file or vocabulary file" << endl;
+            exit(-1);
+        }
+        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
+
+        mpAtlas->SetKeyFrameDababase(mpKeyFrameDatabase);
+        mpAtlas->SetORBVocabulary(mpVocabulary);
+        mpAtlas->PostLoad();
+        //cout << "KF in DB: " << mpKeyFrameDatabase->mnNumKFs << "; words: " << mpKeyFrameDatabase->mnNumWords << endl;
+
+        loadedAtlas = true;
+
+        mpAtlas->CreateNewMap();
+
+        //clock_t timeElapsed = clock() - start;
+        //unsigned msElapsed = timeElapsed / (CLOCKS_PER_SEC / 1000);
+        //cout << "Binary file read in " << msElapsed << " ms" << endl;
+
+        //std::this_thread::sleep_for(std::chrono::microseconds(10*1000*1000));
+    }*/
+
+
+    if (mSensor==IMU_STEREO || mSensor==IMU_MONOCULAR)
+        mpAtlas->SetInertialSensor();
+
+    //Create Drawers. These are used by the Viewer
+    mpFrameDrawer = new FrameDrawer(mpAtlas);
+    mpMapDrawer = new MapDrawer(mpAtlas, params);
+
+    //Initialize the Tracking thread
+    //(it will live in the main thread of execution, the one that called this constructor)
+    // cout << "Seq. Name: " << strSequence << endl;
+    mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer, mpAtlas, mpKeyFrameDatabase, pCamera, params);
+
+    //Initialize the Local Mapping thread and launch
+    mpLocalMapper = new LocalMapping(this, mpAtlas, mSensor==MONOCULAR || mSensor==IMU_MONOCULAR, mSensor==IMU_MONOCULAR || mSensor==IMU_STEREO);
+    mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run,mpLocalMapper);
+    // mpLocalMapper->mInitFr = initFr;
+    mpLocalMapper->mInitFr = false;
+    // mpLocalMapper->mThFarPoints = fsSettings["thFarPoints"];
+    mpLocalMapper->mThFarPoints = params.get<float>("orbslam3.thFarPoints");
+    if(mpLocalMapper->mThFarPoints!=0)
+    {
+        cout << "Discard points further than " << mpLocalMapper->mThFarPoints << " m from current camera" << endl;
+        mpLocalMapper->mbFarPoints = true;
+    }
+    else
+        mpLocalMapper->mbFarPoints = false;
+
+    //Initialize the Loop Closing thread and launch
+    // mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
+    mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR); // mSensor!=MONOCULAR);
+    mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
+
+    //Initialize the Viewer thread and launch
+    if(params.get<int>("orbslam3.viewer"))
+    {
+        mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker, pCamera, params);
+        mptViewer = new thread(&Viewer::Run, mpViewer);
+        mpTracker->SetViewer(mpViewer);
+        mpLoopCloser->mpViewer = mpViewer;
+        mpViewer->both = mpFrameDrawer->both;
+    }
+
+    //Set pointers between threads
+    mpTracker->SetLocalMapper(mpLocalMapper);
+    mpTracker->SetLoopClosing(mpLoopCloser);
+
+    mpLocalMapper->SetTracker(mpTracker);
+    mpLocalMapper->SetLoopCloser(mpLoopCloser);
+
+    mpLoopCloser->SetTracker(mpTracker);
+    mpLoopCloser->SetLocalMapper(mpLocalMapper);
+
+    // Fix verbosity
+    Verbose::SetTh(Verbose::VERBOSITY_QUIET);
+}
+
+cv::Mat System::Track(cvsl::Frame &f)
+{
+    mpCam->ToGrayScale(f);
+    mpCam->UndistortGray(f);
+    if(mpCam->type() == STEREO) {
+        return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, std::vector<IMU::Point>());
+    }
+    if(mpCam->type() == RGBD) {
+        return TrackRGBD(f.mImLeft, f.mImDepth, f.mTimeCamera);
+    }
+    return cv::Mat::eye(4, 4, CV_32F);
+}
+
+cv::Mat System::GetPose()
+{
+
+}
+#endif
+
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, const vector<IMU::Point>& vImuMeas, string filename)
 {
     if(mSensor!=STEREO && mSensor!=IMU_STEREO)

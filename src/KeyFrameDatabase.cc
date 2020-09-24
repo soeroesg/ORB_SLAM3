@@ -20,7 +20,12 @@
 #include "KeyFrameDatabase.h"
 
 #include "KeyFrame.h"
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/DBoW2/BowVector.h>
+#else
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
+#endif
 
 #include<mutex>
 

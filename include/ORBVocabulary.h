@@ -20,8 +20,13 @@
 #ifndef ORBVOCABULARY_H
 #define ORBVOCABULARY_H
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/DBoW2/FORB.h>
+#include <cvsl/DBoW2/TemplatedVocabulary.h>
+#else
 #include"Thirdparty/DBoW2/DBoW2/FORB.h"
 #include"Thirdparty/DBoW2/DBoW2/TemplatedVocabulary.h"
+#endif
 
 namespace ORB_SLAM3
 {

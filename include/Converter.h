@@ -23,8 +23,14 @@
 #include<opencv2/core/core.hpp>
 
 #include<Eigen/Dense>
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <g2o/types/sba/types_six_dof_expmap.h>
+#include <g2o/types/sim3/types_seven_dof_expmap.h>
+#else
 #include"Thirdparty/g2o/g2o/types/types_six_dof_expmap.h"
 #include"Thirdparty/g2o/g2o/types/types_seven_dof_expmap.h"
+#endif
 
 namespace ORB_SLAM3
 {

@@ -27,6 +27,10 @@
 
 #include<mutex>
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/core/cvsl_parameter.h>
+#endif
+
 namespace ORB_SLAM3
 {
 
@@ -34,6 +38,10 @@ class MapDrawer
 {
 public:
     MapDrawer(Atlas* pAtlas, const string &strSettingPath);
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    MapDrawer(Atlas* pAtlas, cvsl::Parameter& params);
+#endif
 
     Atlas* mpAtlas;
 
@@ -49,6 +57,10 @@ private:
 
     bool ParseViewerParamFile(cv::FileStorage &fSettings);
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    bool ParseViewerParamFile(cvsl::Parameter& param);
+#endif
+
     float mKeyFrameSize;
     float mKeyFrameLineWidth;
     float mGraphLineWidth;
@@ -61,11 +73,11 @@ private:
     std::mutex mMutexCamera;
 
     float mfFrameColors[6][3] = {{0.0f, 0.0f, 1.0f},
-                                {0.8f, 0.4f, 1.0f},
-                                {1.0f, 0.2f, 0.4f},
-                                {0.6f, 0.0f, 1.0f},
-                                {1.0f, 1.0f, 0.0f},
-                                {0.0f, 1.0f, 1.0f}};
+                                 {0.8f, 0.4f, 1.0f},
+                                 {1.0f, 0.2f, 0.4f},
+                                 {0.6f, 0.0f, 1.0f},
+                                 {1.0f, 1.0f, 0.0f},
+                                 {0.0f, 1.0f, 1.0f}};
 };
 
 } //namespace ORB_SLAM

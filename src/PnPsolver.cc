@@ -52,7 +52,11 @@
 #include <vector>
 #include <cmath>
 #include <opencv2/core/core.hpp>
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+#include <cvsl/DBoW2/Random.h>
+#else
 #include "Thirdparty/DBoW2/DUtils/Random.h"
+#endif
 #include <algorithm>
 
 using namespace std;

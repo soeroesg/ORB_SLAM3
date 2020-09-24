@@ -49,6 +49,30 @@ Viewer::Viewer(System* pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer
     mbStopTrack = false;
 }
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+Viewer::Viewer(System *pSystem, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Tracking *pTracking, cvsl::Camera *pCamera, cvsl::Parameter &param) :
+    both(false), mpSystem(pSystem), mpFrameDrawer(pFrameDrawer),mpMapDrawer(pMapDrawer), mpTracker(pTracking),
+    mbFinishRequested(false), mbFinished(true), mbStopped(true), mbStopRequested(false)
+{
+    bool is_correct = ParseViewerParamFile(pCamera, param);
+
+    if(!is_correct)
+    {
+        std::cerr << "**ERROR in the config file, the format is not correct**" << std::endl;
+        try
+        {
+            throw -1;
+        }
+        catch(exception &e)
+        {
+
+        }
+    }
+
+    mbStopTrack = false;
+}
+#endif
+
 bool Viewer::ParseViewerParamFile(cv::FileStorage &fSettings)
 {
     bool b_miss_params = false;
@@ -126,6 +150,26 @@ bool Viewer::ParseViewerParamFile(cv::FileStorage &fSettings)
 
     return !b_miss_params;
 }
+
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+bool Viewer::ParseViewerParamFile(cvsl::Camera *pCamera, cvsl::Parameter &param)
+{
+    float fps = pCamera->fps();
+    if(fps<1)
+        fps=30;
+    mT = 1e3/fps;
+
+    mImageWidth = pCamera->width();
+    mImageHeight = pCamera->height();
+
+    param.get<float>("orbslam3.viewer.viewpoint.x", mViewpointX);
+    param.get<float>("orbslam3.viewer.viewpoint.y", mViewpointX);
+    param.get<float>("orbslam3.viewer.viewpoint.z", mViewpointX);
+    param.get<float>("orbslam3.viewer.viewpoint.f", mViewpointX);
+
+    return true;
+}
+#endif
 
 void Viewer::Run()
 {
