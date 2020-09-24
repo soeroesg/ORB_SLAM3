@@ -221,7 +221,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
 System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
-    mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
+    cvsl::Agent(pCamera, params), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
     mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
 {
     if(pCamera->type() == cvsl::Camera::STEREO) {
