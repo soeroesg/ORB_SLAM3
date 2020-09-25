@@ -1021,13 +1021,9 @@ bool Tracking::ParseCamParamFile(cvsl::Camera *pCamera)
 
         mDistCoef = pCamera->getDistCoeff();
 
-
         vector<float> vCamCalib{fx,fy,cx,cy};
-
         mpCamera = new Pinhole(vCamCalib);
-
         mpAtlas->AddCamera(mpCamera);
-
 
         std::cout << "- Camera: Pinhole" << std::endl;
         std::cout << "- fx: " << fx << std::endl;

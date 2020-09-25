@@ -123,6 +123,8 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
 
 #ifndef CVSL_ENABLE_SYSTEM_ORBSLAM3
     UndistortKeyPoints();
+#else
+    mvKeysUn = mvKeys;
 #endif
 
 #ifdef SAVE_TIMES
@@ -227,6 +229,8 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
 
 #ifndef CVSL_ENABLE_SYSTEM_ORBSLAM3
     UndistortKeyPoints();
+#else
+    mvKeysUn = mvKeys;
 #endif
 
     ComputeStereoFromRGBD(imDepth);
@@ -311,6 +315,8 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
 
 #ifndef CVSL_ENABLE_SYSTEM_ORBSLAM3
     UndistortKeyPoints();
+#else
+    mvKeysUn = mvKeys;
 #endif
 
     // Set no stereo information
