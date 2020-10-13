@@ -1393,11 +1393,15 @@ bool Tracking::ParseCamParamFile(cvsl::Camera *pCamera)
 
     if(mSensor==System::RGBD)
     {
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+        mDepthMapFactor = 1.0;
+#else
         mDepthMapFactor = pCamera->depthMapFactor();
         if(fabs(mDepthMapFactor)<1e-5)
             mDepthMapFactor=1;
         else
             mDepthMapFactor = 1.0f/mDepthMapFactor;
+#endif
     }
 
     if(b_miss_params)

@@ -163,9 +163,9 @@ bool Viewer::ParseViewerParamFile(cvsl::Camera *pCamera, cvsl::Parameter &param)
     mImageHeight = pCamera->height();
 
     param.get<float>("sys.viewer.viewpoint.x", mViewpointX);
-    param.get<float>("sys.viewer.viewpoint.y", mViewpointX);
-    param.get<float>("sys.viewer.viewpoint.z", mViewpointX);
-    param.get<float>("sys.viewer.viewpoint.f", mViewpointX);
+    param.get<float>("sys.viewer.viewpoint.y", mViewpointY);
+    param.get<float>("sys.viewer.viewpoint.z", mViewpointZ);
+    param.get<float>("sys.viewer.viewpoint.f", mViewpointF);
 
     return true;
 }
