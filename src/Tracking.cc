@@ -188,7 +188,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
     bool b_parse_imu = true;
     if(mSensor==System::IMU_MONOCULAR || mSensor==System::IMU_STEREO)
     {
-        b_parse_imu = ParseIMUParamFile(params);
+        b_parse_imu = ParseIMUParamFile(dynamic_cast<cvsl::IMU*>(pCamera));
         if(!b_parse_imu)
         {
             std::cout << "*Error with the IMU parameters in the config file*" << std::endl;
@@ -1441,94 +1441,27 @@ bool Tracking::ParseORBParamFile(cvsl::Parameter &param)
     return true;
 }
 
-bool Tracking::ParseIMUParamFile(cvsl::Parameter &param)
+bool Tracking::ParseIMUParamFile(cvsl::IMU* pIMU)
 {
-    return false;
-    /*
+
     bool b_miss_params = false;
 
-    cv::Mat Tbc;
-    cv::FileNode node = fSettings["Tbc"];
-    if(!node.empty())
+    cv::Mat Tbc = pIMU->GetTf();
+    if(Tbc.rows != 4 || Tbc.cols != 4)
     {
-        Tbc = node.mat();
-        if(Tbc.rows != 4 || Tbc.cols != 4)
-        {
-            std::cerr << "*Tbc matrix have to be a 4x4 transformation matrix*" << std::endl;
-            b_miss_params = true;
-        }
-    }
-    else
-    {
-        std::cerr << "*Tbc matrix doesn't exist*" << std::endl;
+        std::cerr << "*Tbc matrix have to be a 4x4 transformation matrix*" << std::endl;
         b_miss_params = true;
     }
 
     cout << endl;
-
     cout << "Left camera to Imu Transform (Tbc): " << endl << Tbc << endl;
 
     float freq, Ng, Na, Ngw, Naw;
-
-    node = fSettings["IMU.Frequency"];
-    if(!node.empty() && node.isInt())
-    {
-        freq = node.operator int();
-    }
-    else
-    {
-        std::cerr << "*IMU.Frequency parameter doesn't exist or is not an integer*" << std::endl;
-        b_miss_params = true;
-    }
-
-    node = fSettings["IMU.NoiseGyro"];
-    if(!node.empty() && node.isReal())
-    {
-        Ng = node.real();
-    }
-    else
-    {
-        std::cerr << "*IMU.NoiseGyro parameter doesn't exist or is not a real number*" << std::endl;
-        b_miss_params = true;
-    }
-
-    node = fSettings["IMU.NoiseAcc"];
-    if(!node.empty() && node.isReal())
-    {
-        Na = node.real();
-    }
-    else
-    {
-        std::cerr << "*IMU.NoiseAcc parameter doesn't exist or is not a real number*" << std::endl;
-        b_miss_params = true;
-    }
-
-    node = fSettings["IMU.GyroWalk"];
-    if(!node.empty() && node.isReal())
-    {
-        Ngw = node.real();
-    }
-    else
-    {
-        std::cerr << "*IMU.GyroWalk parameter doesn't exist or is not a real number*" << std::endl;
-        b_miss_params = true;
-    }
-
-    node = fSettings["IMU.AccWalk"];
-    if(!node.empty() && node.isReal())
-    {
-        Naw = node.real();
-    }
-    else
-    {
-        std::cerr << "*IMU.AccWalk parameter doesn't exist or is not a real number*" << std::endl;
-        b_miss_params = true;
-    }
-
-    if(b_miss_params)
-    {
-        return false;
-    }
+    freq = pIMU->GetFrequencyIMU();
+    Ng   = pIMU->GetGyroNoise();
+    Na   = pIMU->GetAccNoise();
+    Ngw  = pIMU->GetGyroWalk();
+    Naw  = pIMU->GetAccWalk();
 
     const float sf = sqrt(freq);
     cout << endl;
@@ -1542,7 +1475,6 @@ bool Tracking::ParseIMUParamFile(cvsl::Parameter &param)
 
     mpImuPreintegratedFromLastKF = new IMU::Preintegrated(IMU::Bias(),*mpImuCalib);
     return true;
-    */
 }
 #endif
 
