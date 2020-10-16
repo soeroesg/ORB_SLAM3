@@ -431,7 +431,8 @@ cv::Mat System::GetPose()
 
 cv::Mat System::Draw()
 {
-    return mpFrameDrawer->DrawFrame();
+    //return mpFrameDrawer->DrawFrame(true);
+    return cv::Mat();
 }
 #endif
 
