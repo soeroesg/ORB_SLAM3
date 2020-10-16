@@ -225,12 +225,15 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
 {
     if(pCamera->type() == cvsl::Camera::STEREO) {
-        params.set<int>("orbslam3.sensor", 1);
+        if(pCamera->imu()) {
+            params.set<int>("sys.sensor", IMU_STEREO);
+        } else {
+            params.set<int>("sys.sensor", STEREO);
+        }
     }
     if(pCamera->type() == cvsl::Camera::RGBD) {
-        params.set<int>("orbslam3.sensor", 2);
+        params.set<int>("sys.sensor", RGBD);
     }
-
     mSensor = (eSensor) params.get<int>("sys.sensor");
 
     // Output welcome message
@@ -407,7 +410,13 @@ cv::Mat System::Track(cvsl::Frame &f)
     mpCam->ToGrayScale(f);
     mpCam->UndistortGray(f);
     if(mpCam->type() == STEREO) {
-        return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, std::vector<IMU::Point>());
+
+        std::vector<IMU::Point> imuData;
+        for(auto dataPoint : f.mDataIMU) {
+            imuData.push_back(IMU::Point(dataPoint.accel.x, dataPoint.accel.y, dataPoint.accel.z,
+                                         dataPoint.gyro.x, dataPoint.gyro.y, dataPoint.gyro.z, dataPoint.timestamp));
+        }
+        return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, imuData);
     }
     if(mpCam->type() == RGBD) {
         return TrackRGBD(f.mImLeft, f.mImDepth, f.mTimeCamera);
