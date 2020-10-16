@@ -118,6 +118,7 @@ public:
 
     cv::Mat Track(cvsl::Frame &f);
     cv::Mat GetPose();
+    cv::Mat Draw();
 #endif
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.

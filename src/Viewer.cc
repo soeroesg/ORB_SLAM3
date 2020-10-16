@@ -335,6 +335,9 @@ void Viewer::Run()
 
         pangolin::FinishFrame();
 
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+        CVSL_PROCESS_SLEEP_MS(int(mT));
+#else
         cv::Mat toShow;
         cv::Mat im = mpFrameDrawer->DrawFrame(true);
 
@@ -348,6 +351,7 @@ void Viewer::Run()
 
         cv::imshow("ORB-SLAM3: Current Frame",toShow);
         cv::waitKey(mT);
+#endif
 
         if(menuReset)
         {

@@ -417,7 +417,12 @@ cv::Mat System::Track(cvsl::Frame &f)
 
 cv::Mat System::GetPose()
 {
+    return mpTracker->GetLastKeyFrame()->GetPose();
+}
 
+cv::Mat System::Draw()
+{
+    return mpFrameDrawer->DrawFrame();
 }
 #endif
 

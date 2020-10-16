@@ -29,6 +29,7 @@
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
 #include <cvsl/core/cvsl_camera.h>
+#include <cvsl/core/cvsl_process.h>
 #endif
 
 namespace ORB_SLAM3
