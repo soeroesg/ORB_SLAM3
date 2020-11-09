@@ -188,7 +188,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
     bool b_parse_imu = true;
     if(mSensor==System::IMU_MONOCULAR || mSensor==System::IMU_STEREO)
     {
-        b_parse_imu = ParseIMUParamFile(dynamic_cast<cvsl::IMU*>(pCamera));
+        b_parse_imu = ParseIMUParam(pCamera->ParamIMU());
         if(!b_parse_imu)
         {
             std::cout << "*Error with the IMU parameters in the config file*" << std::endl;
@@ -1441,12 +1441,12 @@ bool Tracking::ParseORBParamFile(cvsl::Parameter &param)
     return true;
 }
 
-bool Tracking::ParseIMUParamFile(cvsl::IMU* pIMU)
+bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
 {
 
     bool b_miss_params = false;
 
-    cv::Mat Tbc = pIMU->GetTf();
+    cv::Mat Tbc = param.mT.clone();
     if(Tbc.rows != 4 || Tbc.cols != 4)
     {
         std::cerr << "*Tbc matrix have to be a 4x4 transformation matrix*" << std::endl;
@@ -1457,11 +1457,11 @@ bool Tracking::ParseIMUParamFile(cvsl::IMU* pIMU)
     cout << "Left camera to Imu Transform (Tbc): " << endl << Tbc << endl;
 
     float freq, Ng, Na, Ngw, Naw;
-    freq = pIMU->GetFrequencyIMU();
-    Ng   = pIMU->GetGyroNoise();
-    Na   = pIMU->GetAccNoise();
-    Ngw  = pIMU->GetGyroWalk();
-    Naw  = pIMU->GetAccWalk();
+    freq = param.mFrequency;
+    Ng   = param.mGyroNoise;
+    Na   = param.mAccNoise;
+    Ngw  = param.mGyroWalk;
+    Naw  = param.mAccWalk;
 
     const float sf = sqrt(freq);
     cout << endl;

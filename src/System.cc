@@ -412,10 +412,14 @@ cv::Mat System::Track(cvsl::Frame &f)
     if(mpCam->type() == STEREO) {
 
         std::vector<IMU::Point> imuData;
-        for(auto dataPoint : f.mDataIMU) {
-            imuData.push_back(IMU::Point(dataPoint.accel.x, dataPoint.accel.y, dataPoint.accel.z,
-                                         dataPoint.gyro.x, dataPoint.gyro.y, dataPoint.gyro.z, dataPoint.timestamp));
+
+        if(mpCam->imu()) {
+            for(auto dataPoint : f.mDataIMU) {
+                imuData.push_back(IMU::Point(dataPoint.accel.x, dataPoint.accel.y, dataPoint.accel.z,
+                                             dataPoint.gyro.x, dataPoint.gyro.y, dataPoint.gyro.z, dataPoint.timestamp));
+            }
         }
+
         return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, imuData);
     }
     if(mpCam->type() == RGBD) {
