@@ -1459,9 +1459,9 @@ bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
     float freq, Ng, Na, Ngw, Naw;
     freq = param.mFrequency;
     Ng   = param.mGyroNoise;
-    Na   = param.mAccNoise;
+    Na   = param.mAccelNoise;
     Ngw  = param.mGyroWalk;
-    Naw  = param.mAccWalk;
+    Naw  = param.mAccelWalk;
 
     const float sf = sqrt(freq);
     cout << endl;
