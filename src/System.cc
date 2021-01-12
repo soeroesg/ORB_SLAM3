@@ -224,14 +224,14 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     cvsl::Agent(pCamera, params), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
     mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
 {
-    if(pCamera->type() == cvsl::Camera::STEREO) {
+    if(pCamera->GetType() == cvsl::Camera::STEREO) {
         if(pCamera->imu()) {
             params.set<int>("sys.sensor", IMU_STEREO);
         } else {
             params.set<int>("sys.sensor", STEREO);
         }
     }
-    if(pCamera->type() == cvsl::Camera::RGBD) {
+    if(pCamera->GetType() == cvsl::Camera::RGBD) {
         params.set<int>("sys.sensor", RGBD);
     }
     mSensor = (eSensor) params.get<int>("sys.sensor");
@@ -409,7 +409,7 @@ cv::Mat System::Track(cvsl::Frame &f)
 {
     mpCam->ToGrayScale(f);
     mpCam->UndistortGray(f);
-    if(mpCam->type() == STEREO) {
+    if(mpCam->GetType() == STEREO) {
 
         std::vector<IMU::Point> imuData;
 
@@ -422,7 +422,7 @@ cv::Mat System::Track(cvsl::Frame &f)
 
         return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, imuData);
     }
-    if(mpCam->type() == RGBD) {
+    if(mpCam->GetType() == RGBD) {
         return TrackRGBD(f.mImLeft, f.mImDepth, f.mTimeCamera);
     }
     return cv::Mat::eye(4, 4, CV_32F);
@@ -1116,7 +1116,6 @@ bool System::isLost()
             return false;
     }
 }
-
 
 bool System::isFinished()
 {
