@@ -44,9 +44,9 @@
 #include "ImuTypes.h"
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
-#include <cvsl/core/cvsl_agent.h>
-#include <cvsl/core/cvsl_camera.h>
-#include <cvsl/core/cvsl_parameter.h>
+#include <cvsl/core/agent.h>
+#include <cvsl/core/camera.h>
+#include <cvsl/core/parameter.h>
 #endif
 
 namespace ORB_SLAM3

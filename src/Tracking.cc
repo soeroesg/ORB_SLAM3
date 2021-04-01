@@ -1457,7 +1457,7 @@ bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
     cout << "Left camera to Imu Transform (Tbc): " << endl << Tbc << endl;
 
     float freq, Ng, Na, Ngw, Naw;
-    freq = param.mFrequency;
+    freq = param.mGyroFrequency;
     Ng   = param.mGyroNoise;
     Na   = param.mAccelNoise;
     Ngw  = param.mGyroWalk;

@@ -28,7 +28,7 @@
 #include<mutex>
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
-#include <cvsl/core/cvsl_parameter.h>
+#include <cvsl/core/parameter.h>
 #endif
 
 namespace ORB_SLAM3
