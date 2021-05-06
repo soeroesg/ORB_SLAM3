@@ -21,9 +21,6 @@
 #include <fstream>
 #include <chrono>
 #include <iomanip>
-#ifndef WIN32
-  #include <unistd.h>
-#endif
 
 #include <opencv2/core/core.hpp>
 
@@ -105,7 +102,7 @@ int main(int argc, char **argv)
         {
 
             // Read image from file
-            im = cv::imread(vstrImageFilenames[seq][ni],cv::IMREAD_GRAYSCALE);
+            im = cv::imread(vstrImageFilenames[seq][ni],cv::IMREAD_UNCHANGED);
 
             // clahe
             clahe->apply(im,im);
@@ -162,12 +159,8 @@ int main(int argc, char **argv)
 
     }
 
-    // cout << "ttrack_tot = " << ttrack_tot << std::endl;
     // Stop all threads
     SLAM.Shutdown();
-
-
-    // Tracking time statistics
 
     // Save camera trajectory
 

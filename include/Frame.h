@@ -20,8 +20,6 @@
 #ifndef FRAME_H
 #define FRAME_H
 
-//#define SAVE_TIMES
-
 #include<vector>
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
@@ -34,6 +32,7 @@
 
 #include "ImuTypes.h"
 #include "ORBVocabulary.h"
+#include "Config.h"
 
 #include <mutex>
 #include <opencv2/opencv.hpp>
@@ -65,9 +64,6 @@ public:
 
     // Constructor for Monocular cameras.
     Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extractor,ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat &distCoef, const float &bf, const float &thDepth, Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
-
-    // Destructor
-    // ~Frame();
 
     // Extract ORB on the image. 0 for left image and 1 for right image.
     void ExtractORB(int flag, const cv::Mat &im, const int x0, const int x1);
@@ -252,9 +248,10 @@ public:
 
     int mnDataset;
 
-    double mTimeStereoMatch;
+#ifdef REGISTER_TIMES
     double mTimeORB_Ext;
-
+    double mTimeStereoMatch;
+#endif
 
 private:
 
@@ -273,6 +270,10 @@ private:
     cv::Mat mRcw;
     cv::Mat mtcw;
     //==mtwc
+
+    cv::Matx31f mOwx;
+    cv::Matx33f mRcwx;
+    cv::Matx31f mtcwx;
 
     bool mbImuPreintegrated;
 
@@ -300,6 +301,7 @@ public:
     std::vector<std::size_t> mGridRight[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
     cv::Mat mTlr, mRlr, mtlr, mTrl;
+    cv::Matx34f mTrlx, mTlrx;
 
     Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeStamp, ORBextractor* extractorLeft, ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat &K, cv::Mat &distCoef, const float &bf, const float &thDepth, GeometricCamera* pCamera, GeometricCamera* pCamera2, cv::Mat& Tlr,Frame* pPrevF = static_cast<Frame*>(NULL), const IMU::Calib &ImuCalib = IMU::Calib());
 
