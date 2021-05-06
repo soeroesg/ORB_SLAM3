@@ -1646,9 +1646,13 @@ bool Tracking::ParseCamParamFile(cvsl::Camera *pCamera)
     }
     */
 
-    if(mSensor==System::STEREO || mSensor==System::IMU_STEREO)
+    if(mSensor==System::STEREO || mSensor==System::RGBD || mSensor==System::IMU_STEREO)
     {
+        float fx = pCamera->fx();
         mbf = pCamera->bf();
+        mThDepth = pCamera->thDepth();
+        mThDepth = mbf*mThDepth/fx;
+        cout << endl << "Depth Threshold (Close/Far Points): " << mThDepth << endl;
     }
 
     float fps = pCamera->fps();
@@ -1660,8 +1664,6 @@ bool Tracking::ParseCamParamFile(cvsl::Camera *pCamera)
     mMaxFrames = fps;
 
     cout << "- fps: " << fps << endl;
-
-
     int nRGB = pCamera->rgb();
     mbRGB = nRGB;
 
@@ -1749,7 +1751,6 @@ bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
     Ngw  = param.mGyroWalk;
     Naw  = param.mAccelWalk;
 
-    const float sf = sqrt(freq);
     cout << endl;
     cout << "IMU frequency: " << freq << " Hz" << endl;
     cout << "IMU gyro noise: " << Ng << " rad/s/sqrt(Hz)" << endl;
@@ -1757,6 +1758,7 @@ bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
     cout << "IMU accelerometer noise: " << Na << " m/s^2/sqrt(Hz)" << endl;
     cout << "IMU accelerometer walk: " << Naw << " m/s^3/sqrt(Hz)" << endl;
 
+        const float sf = sqrt(freq);
     mpImuCalib = new IMU::Calib(Tbc,Ng*sf,Na*sf,Ngw/sf,Naw/sf);
 
     mpImuPreintegratedFromLastKF = new IMU::Preintegrated(IMU::Bias(),*mpImuCalib);
@@ -2038,6 +2040,7 @@ void Tracking::PreintegrateIMU()
         if (!mpImuPreintegratedFromLastKF)
             cout << "mpImuPreintegratedFromLastKF does not exist" << endl;
         mpImuPreintegratedFromLastKF->IntegrateNewMeasurement(acc,angVel,tstep);
+
         pImuPreintegratedFromLastFrame->IntegrateNewMeasurement(acc,angVel,tstep);
     }
 
@@ -2738,6 +2741,10 @@ void Tracking::StereoInitialization()
                 return;
             }
 
+            /*
+            std::cout << "mCurrentFrame.mpImuPreintegratedFrame->avgA: " << mCurrentFrame.mpImuPreintegratedFrame->avgA << std::endl;
+            std::cout << "mLastFrame.mpImuPreintegratedFrame->avgA: "  << mLastFrame.mpImuPreintegratedFrame->avgA << std::endl;
+            */
             if (cv::norm(mCurrentFrame.mpImuPreintegratedFrame->avgA-mLastFrame.mpImuPreintegratedFrame->avgA)<0.5)
             {
                 cout << "not enough acceleration" << endl;
@@ -4453,8 +4460,8 @@ void Tracking::UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFrame* pCurr
         t12 = mCurrentFrame.mpImuPreintegrated->dT;
 
         mCurrentFrame.SetImuPoseVelocity(Rwb1*mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaRotation(),
-                                         twb1 + Vwb1*t12 + 0.5f*t12*t12*Gz+ Rwb1*mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaPosition(),
-                                         Vwb1 + Gz*t12 + Rwb1*mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaVelocity());
+                                      twb1 + Vwb1*t12 + 0.5f*t12*t12*Gz+ Rwb1*mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaPosition(),
+                                      Vwb1 + Gz*t12 + Rwb1*mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaVelocity());
     }
 
     mnFirstImuFrameId = mCurrentFrame.mnId;

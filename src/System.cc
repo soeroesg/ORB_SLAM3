@@ -45,11 +45,11 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 {
     // Output welcome message
     cout << endl <<
-    "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
-    "This is free software, and you are welcome to redistribute it" << endl <<
-    "under certain conditions. See LICENSE.txt." << endl << endl;
+            "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+            "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+            "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
+            "This is free software, and you are welcome to redistribute it" << endl <<
+            "under certain conditions. See LICENSE.txt." << endl << endl;
 
     cout << "Input sensor was set to: ";
 
@@ -68,8 +68,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
     if(!fsSettings.isOpened())
     {
-       cerr << "Failed to open settings file at: " << strSettingsFile << endl;
-       exit(-1);
+        cerr << "Failed to open settings file at: " << strSettingsFile << endl;
+        exit(-1);
     }
 
     bool loadedAtlas = false;
@@ -167,11 +167,11 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
 
     // Output welcome message
     cout << endl <<
-    "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
-    "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
-    "This is free software, and you are welcome to redistribute it" << endl <<
-    "under certain conditions. See LICENSE.txt." << endl << endl;
+            "ORB-SLAM3 Copyright (C) 2017-2020 Carlos Campos, Richard Elvira, Juan J. Gómez, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+            "ORB-SLAM2 Copyright (C) 2014-2016 Raúl Mur-Artal, José M.M. Montiel and Juan D. Tardós, University of Zaragoza." << endl <<
+            "This program comes with ABSOLUTELY NO WARRANTY;" << endl  <<
+            "This is free software, and you are welcome to redistribute it" << endl <<
+            "under certain conditions. See LICENSE.txt." << endl << endl;
 
     cout << "Input sensor was set to: ";
 
@@ -206,76 +206,7 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
 
     //Create the Atlas
-    //mpMap = new Map();
     mpAtlas = new Atlas(0);
-    //----
-
-    /*if(strLoadingFile.empty())
-    {
-        //Load ORB Vocabulary
-        cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
-
-        mpVocabulary = new ORBVocabulary();
-        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
-        if(!bVocLoad)
-        {
-            cerr << "Wrong path to vocabulary. " << endl;
-            cerr << "Falied to open at: " << strVocFile << endl;
-            exit(-1);
-        }
-        cout << "Vocabulary loaded!" << endl << endl;
-
-        //Create KeyFrame Database
-        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
-
-        //Create the Atlas
-        //mpMap = new Map();
-        mpAtlas = new Atlas(0);
-    }
-    else
-    {
-        //Load ORB Vocabulary
-        cout << endl << "Loading ORB Vocabulary. This could take a while..." << endl;
-
-        mpVocabulary = new ORBVocabulary();
-        bool bVocLoad = mpVocabulary->loadFromTextFile(strVocFile);
-        if(!bVocLoad)
-        {
-            cerr << "Wrong path to vocabulary. " << endl;
-            cerr << "Falied to open at: " << strVocFile << endl;
-            exit(-1);
-        }
-        cout << "Vocabulary loaded!" << endl << endl;
-
-        cout << "Load File" << endl;
-
-        // Load the file with an earlier session
-        //clock_t start = clock();
-        bool isRead = LoadAtlas(strLoadingFile,BINARY_FILE);
-
-        if(!isRead)
-        {
-            cout << "Error to load the file, please try with other session file or vocabulary file" << endl;
-            exit(-1);
-        }
-        mpKeyFrameDatabase = new KeyFrameDatabase(*mpVocabulary);
-
-        mpAtlas->SetKeyFrameDababase(mpKeyFrameDatabase);
-        mpAtlas->SetORBVocabulary(mpVocabulary);
-        mpAtlas->PostLoad();
-        //cout << "KF in DB: " << mpKeyFrameDatabase->mnNumKFs << "; words: " << mpKeyFrameDatabase->mnNumWords << endl;
-
-        loadedAtlas = true;
-
-        mpAtlas->CreateNewMap();
-
-        //clock_t timeElapsed = clock() - start;
-        //unsigned msElapsed = timeElapsed / (CLOCKS_PER_SEC / 1000);
-        //cout << "Binary file read in " << msElapsed << " ms" << endl;
-
-        //std::this_thread::sleep_for(std::chrono::microseconds(10*1000*1000));
-    }*/
-
 
     if (mSensor==IMU_STEREO || mSensor==IMU_MONOCULAR)
         mpAtlas->SetInertialSensor();
@@ -706,7 +637,7 @@ void System::SaveKeyFrameTrajectoryTUM(const string &filename)
     {
         KeyFrame* pKF = vpKFs[i];
 
-       // pKF->SetPose(pKF->GetPose()*Two);
+        // pKF->SetPose(pKF->GetPose()*Two);
 
         if(pKF->isBad())
             continue;
