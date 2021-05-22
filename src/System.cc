@@ -275,8 +275,8 @@ cv::Mat System::Track(cvsl::Frame &f)
 
         if(mpCam->imu()) {
             for(auto dataPoint : f.mSyncGyroAccelData) {
-                imuData.push_back(IMU::Point(dataPoint.accel.x, dataPoint.accel.y, dataPoint.accel.z,
-                                             dataPoint.gyro.x, dataPoint.gyro.y, dataPoint.gyro.z, dataPoint.timestamp));
+                imuData.push_back(IMU::Point((float) dataPoint.accel.x, (float) dataPoint.accel.y, (float) dataPoint.accel.z,
+                                             (float) dataPoint.gyro.x, (float) dataPoint.gyro.y, (float) dataPoint.gyro.z, dataPoint.timestamp));
             }
         }
 

@@ -45,6 +45,7 @@
 
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
 #include <cvsl/core/camera.h>
+#include <cvsl/core/converter.h>
 #endif
 
 namespace ORB_SLAM3
@@ -79,7 +80,7 @@ public:
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
     bool ParseCamParamFile(cvsl::Camera* pCamera);
     bool ParseORBParamFile(cvsl::Parameter& param);
-    bool ParseIMUParam(const cvsl::IMU::Parameter &param);
+    bool ParseIMUParam(cvsl::Camera *pCamera);
 #endif
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.

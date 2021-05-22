@@ -146,7 +146,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer,
     bool b_parse_imu = true;
     if(mSensor==System::IMU_MONOCULAR || mSensor==System::IMU_STEREO)
     {
-        b_parse_imu = ParseIMUParam(pCamera->ParamIMU());
+        b_parse_imu = ParseIMUParam(pCamera);
         if(!b_parse_imu)
         {
             std::cout << "*Error with the IMU parameters in the config file*" << std::endl;
@@ -1729,12 +1729,13 @@ bool Tracking::ParseORBParamFile(cvsl::Parameter &param)
     return true;
 }
 
-bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
+bool Tracking::ParseIMUParam(cvsl::Camera* pCamera)
 {
 
+    cvsl::IMU::Parameter param = pCamera->ParamIMU();
     bool b_miss_params = false;
 
-    cv::Mat Tbc = param.mT.clone();
+    cv::Matx44f Tbc = pCamera->GetPose(cvsl::Camera::POSE_IMU_LEFTCAM);
     if(Tbc.rows != 4 || Tbc.cols != 4)
     {
         std::cerr << "*Tbc matrix have to be a 4x4 transformation matrix*" << std::endl;
@@ -1758,8 +1759,8 @@ bool Tracking::ParseIMUParam(const cvsl::IMU::Parameter& param)
     cout << "IMU accelerometer noise: " << Na << " m/s^2/sqrt(Hz)" << endl;
     cout << "IMU accelerometer walk: " << Naw << " m/s^3/sqrt(Hz)" << endl;
 
-        const float sf = sqrt(freq);
-    mpImuCalib = new IMU::Calib(Tbc,Ng*sf,Na*sf,Ngw/sf,Naw/sf);
+    const float sf = sqrt(freq);
+    mpImuCalib = new IMU::Calib(cvsl::Converter::toCvMat(Tbc), Ng*sf,Na*sf,Ngw/sf,Naw/sf);
 
     mpImuPreintegratedFromLastKF = new IMU::Preintegrated(IMU::Bias(),*mpImuCalib);
     return true;
