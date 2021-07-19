@@ -1732,7 +1732,7 @@ bool Tracking::ParseORBParamFile(cvsl::Parameter &param)
 bool Tracking::ParseIMUParam(cvsl::Camera* pCamera)
 {
 
-    cvsl::IMU::Parameter param = pCamera->ParamIMU();
+    cvsl::IMUParam param = pCamera->ParamIMU();
     bool b_miss_params = false;
 
     cv::Matx44f Tbc = pCamera->GetPose(cvsl::Camera::POSE_IMU_LEFTCAM);
@@ -2242,7 +2242,9 @@ void Tracking::Track()
         }
         else if(mCurrentFrame.mTimeStamp>mLastFrame.mTimeStamp+1.0)
         {
-            cout << "id last: " << mLastFrame.mnId << "    id curr: " << mCurrentFrame.mnId << endl;
+            cout << std::endl << "id last: " << mLastFrame.mnId << "    id curr: " << mCurrentFrame.mnId << endl;
+            std::cout << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << mCurrentFrame.mTimeStamp << std::endl;
+            std::cout << std::setprecision(std::numeric_limits<long double>::digits10 + 1) << mLastFrame.mTimeStamp << std::endl;
             if(mpAtlas->isInertial())
             {
 
@@ -2265,7 +2267,7 @@ void Tracking::Track()
                 }
             }
 
-            return;
+            // return;
         }
     }
 

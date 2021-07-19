@@ -163,6 +163,9 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     if(pCamera->GetType() == cvsl::Camera::RGBD) {
         params.set<int>("sys.sensor", RGBD);
     }
+    if(pCamera->GetType() == cvsl::Camera::MONOCULAR) {
+        params.set<int>("sys.sensor", MONOCULAR);
+    }
     mSensor = (eSensor) params.get<int>("sys.sensor");
 
     // Output welcome message
@@ -269,21 +272,24 @@ cv::Mat System::Track(cvsl::Frame &f)
 {
     mpCam->ToGrayScale(f);
     mpCam->UndistortGray(f);
+
+
+    if(mpCam->GetType() == MONOCULAR) {
+        return TrackMonocular(f.mImLeftGray, f.Times::Get().s());
+    }
+
     if(mpCam->GetType() == STEREO) {
-
         std::vector<IMU::Point> imuData;
-
         if(mpCam->imu()) {
             for(auto dataPoint : f.mSyncGyroAccelData) {
                 imuData.push_back(IMU::Point((float) dataPoint.accel.x, (float) dataPoint.accel.y, (float) dataPoint.accel.z,
-                                             (float) dataPoint.gyro.x, (float) dataPoint.gyro.y, (float) dataPoint.gyro.z, dataPoint.timestamp));
+                                             (float) dataPoint.gyro.x, (float) dataPoint.gyro.y, (float) dataPoint.gyro.z, dataPoint.timestamp.s()));
             }
         }
-
-        return TrackStereo(f.mImLeftGray, f.mImRightGray, f.mTimeCamera, imuData);
+        return TrackStereo(f.mImLeftGray, f.mImRightGray, f.Times::Get().s(), imuData);
     }
     if(mpCam->GetType() == RGBD) {
-        return TrackRGBD(f.mImLeft, f.mImDepth, f.mTimeCamera);
+        return TrackRGBD(f.mImLeft, f.mImDepth, f.Times::Get().s());
     }
     return cv::Mat::eye(4, 4, CV_32F);
 }
