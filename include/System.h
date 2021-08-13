@@ -78,9 +78,11 @@ class Atlas;
 class Tracking;
 class LocalMapping;
 class LoopClosing;
+class MapExporter;
 
-class System
-{
+class System {
+    friend class MapExporter;
+
 public:
     // Input sensor
     enum eSensor{

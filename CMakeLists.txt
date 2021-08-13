@@ -79,6 +79,7 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   src/Atlas.cc
   src/Map.cc
   src/MapDrawer.cc
+  src/MapExporter.cpp
   src/Optimizer.cc
   src/Frame.cc
   src/KeyFrameDatabase.cc
@@ -105,6 +106,7 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   include/Atlas.h
   include/Map.h
   include/MapDrawer.h
+  include/MapExporter.h
   include/Optimizer.h
   include/Frame.h
   include/KeyFrameDatabase.h
@@ -190,67 +192,71 @@ endif()
 
 
 ### Build examples
+option(BUILD_EXAMPLES "Build examples" ON)
+if(BUILD_EXAMPLES)
 
-# RGB-D examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+  # RGB-D examples
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
-add_executable(rgbd_tum
-Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum PRIVATE ${PROJECT_NAME})
+  add_executable(rgbd_tum
+    Examples/RGB-D/rgbd_tum.cc)
+  target_link_libraries(rgbd_tum PRIVATE ${PROJECT_NAME})
 
 
-# Stereo examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
+  # Stereo examples
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
 
-add_executable(stereo_kitti
-  Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti PRIVATE ${PROJECT_NAME})
+  add_executable(stereo_kitti
+    Examples/Stereo/stereo_kitti.cc)
+  target_link_libraries(stereo_kitti PRIVATE ${PROJECT_NAME})
 
-add_executable(stereo_euroc
-  Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc PRIVATE ${PROJECT_NAME})
+  add_executable(stereo_euroc
+    Examples/Stereo/stereo_euroc.cc)
+  target_link_libraries(stereo_euroc PRIVATE ${PROJECT_NAME})
 
-add_executable(stereo_tum_vi
-  Examples/Stereo/stereo_tum_vi.cc)
-target_link_libraries(stereo_tum_vi PRIVATE ${PROJECT_NAME})
+  add_executable(stereo_tum_vi
+    Examples/Stereo/stereo_tum_vi.cc)
+  target_link_libraries(stereo_tum_vi PRIVATE ${PROJECT_NAME})
 
-# Monocular examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
+  # Monocular examples
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
 
-add_executable(mono_tum
-  Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum PRIVATE ${PROJECT_NAME})
+  add_executable(mono_tum
+    Examples/Monocular/mono_tum.cc)
+  target_link_libraries(mono_tum PRIVATE ${PROJECT_NAME})
 
-add_executable(mono_kitti
-  Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti PRIVATE ${PROJECT_NAME})
+  add_executable(mono_kitti
+    Examples/Monocular/mono_kitti.cc)
+  target_link_libraries(mono_kitti PRIVATE ${PROJECT_NAME})
 
-add_executable(mono_euroc
-  Examples/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc PRIVATE ${PROJECT_NAME})
+  add_executable(mono_euroc
+    Examples/Monocular/mono_euroc.cc)
+  target_link_libraries(mono_euroc PRIVATE ${PROJECT_NAME})
 
-add_executable(mono_tum_vi
-  Examples/Monocular/mono_tum_vi.cc)
-target_link_libraries(mono_tum_vi PRIVATE ${PROJECT_NAME})
+  add_executable(mono_tum_vi
+    Examples/Monocular/mono_tum_vi.cc)
+  target_link_libraries(mono_tum_vi PRIVATE ${PROJECT_NAME})
 
-# Monocular-Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular-Inertial)
+  # Monocular-Inertial examples
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular-Inertial)
 
-add_executable(mono_inertial_euroc
-  Examples/Monocular-Inertial/mono_inertial_euroc.cc)
-target_link_libraries(mono_inertial_euroc PRIVATE ${PROJECT_NAME})
+  add_executable(mono_inertial_euroc
+    Examples/Monocular-Inertial/mono_inertial_euroc.cc)
+  target_link_libraries(mono_inertial_euroc PRIVATE ${PROJECT_NAME})
 
-add_executable(mono_inertial_tum_vi
-  Examples/Monocular-Inertial/mono_inertial_tum_vi.cc)
-target_link_libraries(mono_inertial_tum_vi PRIVATE ${PROJECT_NAME})
+  add_executable(mono_inertial_tum_vi
+    Examples/Monocular-Inertial/mono_inertial_tum_vi.cc)
+  target_link_libraries(mono_inertial_tum_vi PRIVATE ${PROJECT_NAME})
 
-# Stereo-Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)
+  # Stereo-Inertial examples
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)
 
-add_executable(stereo_inertial_euroc
-  Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
-target_link_libraries(stereo_inertial_euroc PRIVATE ${PROJECT_NAME})
+  add_executable(stereo_inertial_euroc
+    Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
+  target_link_libraries(stereo_inertial_euroc PRIVATE ${PROJECT_NAME})
 
-add_executable(stereo_inertial_tum_vi
-  Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
-target_link_libraries(stereo_inertial_tum_vi PRIVATE ${PROJECT_NAME})
+  add_executable(stereo_inertial_tum_vi
+    Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
+  target_link_libraries(stereo_inertial_tum_vi PRIVATE ${PROJECT_NAME})
+
+endif(BUILD_EXAMPLES)
