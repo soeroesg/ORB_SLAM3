@@ -20,9 +20,7 @@ class MapExporter {
 public:
     // Save the keyframes in Colmap-readable format
     // See https://colmap.github.io/format.html
-    // TODO: KeyFrame does not store the image size, but Colmap requires it, so we pass from outside for now.
-    // We should instead modify KeyFrame to also store width and height.
-    static void SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3, const std::string& dir_path, const cv::Size& imgSize);
+    static void SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3, const std::string& dir_path);
 
 };
 
