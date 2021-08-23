@@ -307,7 +307,9 @@ public:
 
     cv::Mat UnprojectStereoFishEye(const int &i);
 
-    cv::Mat imgLeft, imgRight;
+    // optional storage of full input frames, left being the main camera
+    cv::Mat imgLeft, imgRight, imgDepth;
+    static bool bStoreKeyFrameImages;
 
     void PrintPointDistribution(){
         int left = 0, right = 0;

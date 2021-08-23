@@ -332,7 +332,7 @@ protected:
     // Bad flags
     bool mbNotErase;
     bool mbToBeErased;
-    bool mbBad;    
+    bool mbBad;
 
     float mHalfBaseline; // Only for visualization
 
@@ -367,7 +367,8 @@ public:
     cv::Mat GetRightRotation();
     cv::Mat GetRightTranslation();
 
-    cv::Mat imgLeft, imgRight;
+    // optional storage of full input frames, left being the main camera
+    cv::Mat imgLeft, imgRight, imgDepth;
 
     void PrintPointDistribution(){
         int left = 0, right = 0;

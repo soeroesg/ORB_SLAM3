@@ -123,6 +123,11 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR); // mSensor!=MONOCULAR);
     mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
 
+    cv::FileNode node = fsSettings["storeKeyFrameImages"];
+    if (!node.empty() && node.real() > 0.0) {
+        Frame::bStoreKeyFrameImages = true;
+    }
+
     //Initialize the Viewer thread and launch
     if(bUseViewer)
     {

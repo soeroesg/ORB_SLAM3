@@ -42,6 +42,8 @@ float Frame::mfGridElementWidthInv, Frame::mfGridElementHeightInv;
 //For stereo fisheye matching
 cv::BFMatcher Frame::BFmatcher = cv::BFMatcher(cv::NORM_HAMMING);
 
+bool Frame::bStoreKeyFrameImages = false;
+
 Frame::Frame(): mpcpi(NULL), mpImuPreintegrated(NULL), mpPrevFrame(NULL), mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbImuPreintegrated(false)
 {
 #ifdef REGISTER_TIMES
@@ -71,6 +73,12 @@ Frame::Frame(const Frame &frame)
      mTlr(frame.mTlr.clone()), mRlr(frame.mRlr.clone()), mtlr(frame.mtlr.clone()), mTrl(frame.mTrl.clone()),
      mTrlx(frame.mTrlx), mTlrx(frame.mTlrx), mOwx(frame.mOwx), mRcwx(frame.mRcwx), mtcwx(frame.mtcwx)
 {
+    if (bStoreKeyFrameImages) {
+        imgLeft = frame.imgLeft.clone();
+        imgRight = frame.imgRight.clone();
+        imgDepth = frame.imgDepth.clone();
+    }
+
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++){
             mGrid[i][j]=frame.mGrid[i][j];
@@ -100,6 +108,11 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
      mImuCalib(ImuCalib), mpImuPreintegrated(NULL), mpPrevFrame(pPrevF),mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbImuPreintegrated(false),
      mpCamera(pCamera) ,mpCamera2(nullptr)
 {
+    if (bStoreKeyFrameImages) {
+        imgLeft = imLeft.clone();
+        imgRight = imRight.clone();
+    }
+
     // Frame ID
     mnId=nNextId++;
 
@@ -204,6 +217,11 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
      mImuCalib(ImuCalib), mpImuPreintegrated(NULL), mpPrevFrame(pPrevF), mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbImuPreintegrated(false),
      mpCamera(pCamera),mpCamera2(nullptr)
 {
+    if (bStoreKeyFrameImages) {
+        imgLeft = imGray.clone();
+        imgDepth = imDepth.clone();
+    }
+
     // Frame ID
     mnId=nNextId++;
 
@@ -287,6 +305,10 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
      mImuCalib(ImuCalib), mpImuPreintegrated(NULL),mpPrevFrame(pPrevF),mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbImuPreintegrated(false), mpCamera(pCamera),
      mpCamera2(nullptr)
 {
+    if (bStoreKeyFrameImages) {
+        imgLeft = imGray.clone();
+    }
+
     // Frame ID
     mnId=nNextId++;
 
@@ -1022,8 +1044,10 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
         :mpcpi(NULL), mpORBvocabulary(voc),mpORBextractorLeft(extractorLeft),mpORBextractorRight(extractorRight), mTimeStamp(timeStamp), mK(K.clone()), mDistCoef(distCoef.clone()), mbf(bf), mThDepth(thDepth),
          mImuCalib(ImuCalib), mpImuPreintegrated(NULL), mpPrevFrame(pPrevF),mpImuPreintegratedFrame(NULL), mpReferenceKF(static_cast<KeyFrame*>(NULL)), mbImuPreintegrated(false), mpCamera(pCamera), mpCamera2(pCamera2), mTlr(Tlr)
 {
-    imgLeft = imLeft.clone();
-    imgRight = imRight.clone();
+    if (bStoreKeyFrameImages) {
+        imgLeft = imLeft.clone();
+        imgRight = imRight.clone();
+    }
 
     // Frame ID
     mnId=nNextId++;

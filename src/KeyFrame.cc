@@ -64,9 +64,11 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
     mvLeftToRightMatch(F.mvLeftToRightMatch),mvRightToLeftMatch(F.mvRightToLeftMatch),mTlr(F.mTlr.clone()),
     mvKeysRight(F.mvKeysRight), NLeft(F.Nleft), NRight(F.Nright), mTrl(F.mTrl), mnNumberOfOpt(0)
 {
-
-    imgLeft = F.imgLeft.clone();
-    imgRight = F.imgRight.clone();
+    if (F.bStoreKeyFrameImages) {
+        imgLeft = F.imgLeft.clone();
+        imgRight = F.imgRight.clone();
+        imgDepth = F.imgDepth.clone();
+    }
 
     mnId=nNextId++;
 
