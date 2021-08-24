@@ -369,6 +369,7 @@ public:
 
     // optional storage of full input frames, left being the main camera
     cv::Mat imgLeft, imgRight, imgDepth;
+    cv::Size imageSize; // store here because the camera models do not store it
 
     void PrintPointDistribution(){
         int left = 0, right = 0;

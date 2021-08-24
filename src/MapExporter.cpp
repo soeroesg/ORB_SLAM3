@@ -51,7 +51,7 @@ bool validateCameraParameters(KeyFrame* pKF, GeometricCamera* cameraPtr) {
     return isCorrect;
 }
 
-void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, const string& path) {
+void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, const string& path, bool bCopyImages/* = false*/) {
     std::cout << std::endl << "Saving keyframe trajectory to " << path << " ..." << std::endl;
 
     // make sure the path exists and it is a directory
@@ -85,13 +85,21 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
     std::vector<KeyFrame*> vpKFs = pLargestMap->GetAllKeyFrames();
     std::sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
+
     // We extract the camera information from keyframes while iterating through the keyframes
     std::map<unsigned long, GeometricCamera*> cameraPtrs;
     std::map<unsigned long, cv::Size> cameraSizes; // stores image size for each camera ID, because the camera models don't store it
     std::map<unsigned long, cv::Mat> cameraDistortions; // stores distortion parameters for each camera ID, because the camera models don't store them
 
+    // Though image IDs are normally given by colmap, we store here the image IDs given by ORBSLAM together with the original file names
+    std::map<unsigned int, std::string> image_ids;
+
+    // We also collect potentially matching images: the neighboring keyframes.
+    std::set<std::pair<unsigned int, unsigned int>> matches;
+
     /*
     Example images.txt
+    See https://colmap.github.io/format.html#images-txt
     # Image list with two lines of data per image:
     #   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME
     #   POINTS2D[] as (X, Y, POINT3D_ID)
@@ -110,12 +118,6 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         return;
     }
 
-    // Though image IDs are normally given by colmap, we store here the image IDs given by ORBSLAM together with the original file names
-    std::map<unsigned int, std::string> image_ids;
-
-    // We also collect potentially matching images: the neighboring keyframes.
-    std::set<std::pair<unsigned int, unsigned int>> matches;
-
     size_t num_keyframes = 0;
     for (size_t i = 0; i < vpKFs.size(); i++) {
         KeyFrame* pKF = vpKFs[i];
@@ -123,10 +125,13 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         if (pKF->isBad())
             continue;
 
+        unsigned long keyFrameId = pKF->mnId;
+        std::string keyFrameFileName = pKF->mNameFile;
+
         // check whether we have already stored this camera
         GeometricCamera* cameraPtr = pKF->mpCamera;
         unsigned int cameraId = cameraPtr->GetId();
-        std::cout << "KeyFrame " << pKF->mnId << " was captured by camera " << cameraId << std::endl;
+        std::cout << "KeyFrame " << keyFrameId << " was captured by camera " << cameraId << std::endl;
         validateCameraParameters(pKF, cameraPtr);
         if (cameraPtrs.find(cameraId) == cameraPtrs.end()) {
             // we have not seen this camera before
@@ -134,7 +139,10 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
             // NOTE: the original ORB_SLAM3 does not store the input image so this is empty.
             // however, our modified version has a setting for storing the input images within the keyframes.
-            cv::Size cameraSize = pKF->imgLeft.size();
+            cv::Size cameraSize = pKF->imageSize;
+            if (cameraSize.empty()) {
+                std::cout << "WARNING: camera " + std::to_string(cameraId) + " seems to have 0 image size" << std::endl;
+            }
             cameraSizes.insert(std::make_pair(cameraId, cameraSize));
             cv::Mat cameraDisortion = pKF->mDistCoef.clone();
             cameraDistortions.insert(std::make_pair(cameraId, cameraDisortion));
@@ -147,8 +155,8 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
             std::vector<float> q = Converter::toQuaternion(R);
             cv::Mat twb = pKF->GetImuPosition();
             // warning: q.w comes first!
-            images_file << pKF->mnId
-                << " " << setprecision(6)
+            images_file << keyFrameId
+                << setprecision(6)
                 << " " << q[3] << " " << q[0] << " " << q[1] << " " << q[2]
                 << " " << twb.at<float>(0) << " " << twb.at<float>(1) << " " << twb.at<float>(2);
         }
@@ -157,19 +165,37 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
             std::vector<float> q = Converter::toQuaternion(R);
             cv::Mat t = pKF->GetCameraCenter();
             // warning: q.w comes first!
-            images_file << pKF->mnId
-                << " " << setprecision(6)
+            images_file << keyFrameId
+                << setprecision(6)
                 << " " << q[3] << " " << q[0] << " " << q[1] << " " << q[2]
                 << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2);
         }
 
-        images_file << " " << cameraId << " " << pKF->mNameFile << std::endl;
+        if (bCopyImages) {
+            std::string path_images = path + "/images";
+            if (!cv::utils::fs::exists(path_images)) {
+                if (!cv::utils::fs::createDirectory(path_images)) {
+                    std::cout << "Could not create directory " + path_images << std::endl;
+                }
+            }
+            std::string keyFrameFileNameBase = keyFrameFileName.substr(keyFrameFileName.find_last_of("/\\") + 1);
+            std::string keyFrameFilenameNew = path_images + "/" + keyFrameFileNameBase;
+            std::ifstream source(keyFrameFileName, ios::binary);
+            std::ofstream dest(keyFrameFilenameNew, ios::binary);
+            dest << source.rdbuf();
+            source.close();
+            dest.close();
+            //keyFrameFileName = keyFrameFilenameNew; // WARNING: we overwrite the file name to point to the new copy
+            keyFrameFileName = keyFrameFileNameBase; // WARNING: only store the base filename within the 'images' folder
+        }
+
+        images_file << " " << cameraId << " " << keyFrameFileName << std::endl;
 
         // leave one empty line after each image
         images_file << std::endl;
 
         // save image ID
-        image_ids.insert(std::make_pair(pKF->mnId, pKF->mNameFile));
+        image_ids.insert(std::make_pair(keyFrameId, keyFrameFileName));
 
         // now check connected keyframes, these will be good candidates for image matching
         std::set<KeyFrame*> connectedKeyFrames = pKF->GetConnectedKeyFrames();
@@ -177,8 +203,8 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
             // Instead of storing filenames directly here (which would lead to storing each match twice, once in each direction),
             // we store the ids but in an ordered way. We will look up the filenames that belong to the IDs later.
             // The set will take care of overwriting duplicate entries about matches.
-            unsigned int smallerId = std::min(pKF->mnId, connectedKeyFrame->mnId);
-            unsigned int largerId = std::max(pKF->mnId, connectedKeyFrame->mnId);
+            unsigned int smallerId = std::min(keyFrameId, connectedKeyFrame->mnId);
+            unsigned int largerId = std::max(keyFrameId, connectedKeyFrame->mnId);
             matches.insert(std::make_pair(smallerId, largerId));
         }
 
@@ -204,6 +230,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
     /*
     Example cameras.txt
+    See https://colmap.github.io/format.html#cameras-txt
     # Camera list with one line of data per camera:
     #   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]
     # Number of cameras: 3
@@ -291,6 +318,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
     /*
     Example points3D.txt
+    See https://colmap.github.io/format.html#points3d-txt
     # 3D point list with one line of data per point:
     #   POINT3D_ID, X, Y, Z, R, G, B, ERROR, TRACK[] as (IMAGE_ID, POINT2D_IDX)
     # Number of points: 3, mean track length: 3.3334

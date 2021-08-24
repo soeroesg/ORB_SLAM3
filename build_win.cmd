@@ -2,7 +2,7 @@
 
 :: NOTE: dependencies are assumed to be installed to this folder.
 :: Change according to your paths.
-set ORBSLAM3_DEPENDENCIES_INSTALL_DIR="C:\dev\slamtest\install"
+set ORBSLAM3_DEPENDENCIES_INSTALL_DIR="C:\dev\collabslam\install"
 @echo "ORBSLAM3_DEPENDENCIES_INSTALL_DIR: %ORBSLAM3_DEPENDENCIES_INSTALL_DIR%"
 
 set CMAKE_EXECUTABLE="C:\Program Files\CMake\bin\cmake.exe"

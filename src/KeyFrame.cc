@@ -69,6 +69,7 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
         imgRight = F.imgRight.clone();
         imgDepth = F.imgDepth.clone();
     }
+    imageSize = imgLeft.size();
 
     mnId=nNextId++;
 

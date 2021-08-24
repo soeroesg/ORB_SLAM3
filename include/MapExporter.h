@@ -20,7 +20,7 @@ class MapExporter {
 public:
     // Save the keyframes in Colmap-readable format
     // See https://colmap.github.io/format.html
-    static void SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3, const std::string& dir_path);
+    static void SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3, const std::string& dir_path, bool bCopyImages = false);
 
 };
 

@@ -78,6 +78,7 @@ Frame::Frame(const Frame &frame)
         imgRight = frame.imgRight.clone();
         imgDepth = frame.imgDepth.clone();
     }
+    imageSize = frame.imageSize;
 
     for(int i=0;i<FRAME_GRID_COLS;i++)
         for(int j=0; j<FRAME_GRID_ROWS; j++){
@@ -112,6 +113,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
         imgLeft = imLeft.clone();
         imgRight = imRight.clone();
     }
+    imageSize = imLeft.size();
 
     // Frame ID
     mnId=nNextId++;
@@ -221,6 +223,7 @@ Frame::Frame(const cv::Mat &imGray, const cv::Mat &imDepth, const double &timeSt
         imgLeft = imGray.clone();
         imgDepth = imDepth.clone();
     }
+    imageSize = imGray.size();
 
     // Frame ID
     mnId=nNextId++;
@@ -308,6 +311,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     if (bStoreKeyFrameImages) {
         imgLeft = imGray.clone();
     }
+    imageSize = imGray.size();
 
     // Frame ID
     mnId=nNextId++;
@@ -1048,6 +1052,7 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
         imgLeft = imLeft.clone();
         imgRight = imRight.clone();
     }
+    imageSize = imLeft.size();
 
     // Frame ID
     mnId=nNextId++;
