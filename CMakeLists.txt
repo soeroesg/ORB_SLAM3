@@ -10,13 +10,21 @@ message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 # Debug postfix
 set(CMAKE_DEBUG_POSTFIX "_d")
 
-# Check C++11 support
-set(CMAKE_CXX_STANDARD 11)
+# Check C++11/C++17 support
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS OFF)
 cmake_policy(SET CMP0057 NEW) # enable IN_LIST operator
-if(cxx_std_11 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+if(cxx_std_17 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  set(CMAKE_CXX_STANDARD 17)
+  add_definitions(-DCOMPILEDWITHC17)
   add_definitions(-DCOMPILEDWITHC11)
+  message(STATUS "Compiling with C++17 standard")
+elseif(cxx_std_11 IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  set(CMAKE_CXX_STANDARD 11)
+  add_definitions(-DCOMPILEDWITHC11)
+  message(STATUS "Compiling with C++11 standard")
+else()
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
 # Compiler specific options for gcc
@@ -30,7 +38,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
 endif()
 # Compiler specific options for MSVC
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /bigobj")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /bigobj /Zc:__cplusplus")
   # use the static CRT if other libraries are compiled with /MT
   # (CMake sets /MD by default, but for example Pangolin uses /MT by default)
   #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
@@ -172,7 +180,11 @@ if(realsense2_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${realsense2_LIBRARY})
 endif()
 
-find_package(Boost REQUIRED COMPONENTS serialization)
+if(${CMAKE_CXX_STANDARD} LESS 17 AND ${OpenCV_VERSION_MAJOR} LESS 4)
+  find_package(Boost REQUIRED COMPONENTS serialization filesystem)
+else()
+  find_package(Boost REQUIRED COMPONENTS serialization)
+endif()
 message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES})
 

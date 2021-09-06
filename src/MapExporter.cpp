@@ -3,14 +3,23 @@
 #include "KeyFrame.h"
 #include "Converter.h"
 
-#include <opencv2/core/utils/filesystem.hpp>
-//#include <filesystem> //only available in C++17
-
 #include <iostream>
 #include <vector>
 #include <utility>
 #include <set>
 #include <map>
+
+#include <opencv2/core/version.hpp>
+#if(__cplusplus >= 201703L)
+  #define OS3_USE_STD_FILESYSTEM 1
+  #include <filesystem> //only available in C++17
+#elif(CV_VERSION_MAJOR >= 4)
+  #define OS3_USE_CV_FILESYSTEM 1
+  #include <opencv2/core/utils/filesystem.hpp> // only available in OpenCV 3.4
+#else
+  #define OS3_USE_BOOST_FILESYSTEM 1
+  #include <boost/filesystem.hpp>
+#endif
 
 
 namespace ORB_SLAM3 {
@@ -55,14 +64,28 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
     std::cout << std::endl << "Saving keyframe trajectory to " << path << " ..." << std::endl;
 
     // make sure the path exists and it is a directory
+#if(OS3_USE_STD_FILESYSTEM)
+    if (!std::filesystem::exists(path)) {
+        if (!std::filesystem::create_directory(path)) {
+#elif(OS3_USE_CV_FILESYSTEM)
     if (!cv::utils::fs::exists(path)) {
         if (!cv::utils::fs::createDirectory(path)) {
+#elif(OS3_USE_BOOST_FILESYSTEM)
+    if (!boost::filesystem::exists(path)) {
+        if (!boost::filesystem::create_directory(path)) {
+#endif
             std::string msg = "Could not create directory " + path;
             std::cout << msg << std::endl;
             return;
         }
     }
+#if(OS3_USE_STD_FILESYSTEM)
+    if (!std::filesystem::is_directory(path)) {
+#elif(OS3_USE_CV_FILESYSTEM)
     if (!cv::utils::fs::isDirectory(path)) {
+#elif(OS3_USE_BOOST_FILESYSTEM)
+    if (!boost::filesystem::is_directory(path)) {
+#endif
         std::string msg = path + " is not a directory! Please provide a directory for exporting keyframe trajectory in colmap format.";
         std::cout << msg << std::endl;
         return;
@@ -173,8 +196,16 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
         if (bCopyImages) {
             std::string path_images = path + "/images";
+#if(OS3_USE_STD_FILESYSTEM)
+            if (!std::filesystem::exists(path_images)) {
+                if (!std::filesystem::create_directory(path_images)) {
+#elif(OS3_USE_CV_FILESYSTEM)
             if (!cv::utils::fs::exists(path_images)) {
                 if (!cv::utils::fs::createDirectory(path_images)) {
+#elif(OS3_USE_BOOST_FILESYSTEM)
+            if (!boost::filesystem::exists(path_images)) {
+                if (!boost::filesystem::create_directory(path_images)) {
+#endif
                     std::cout << "Could not create directory " + path_images << std::endl;
                 }
             }
