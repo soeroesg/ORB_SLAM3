@@ -153,7 +153,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
         // check whether we have already stored this camera
         GeometricCamera* cameraPtr = pKF->mpCamera;
-        unsigned int cameraId = cameraPtr->GetId();
+        unsigned int cameraId = cameraPtr->GetId(); // NOTE we could increase IDs by 1 because colmap does not like ID 0
         std::cout << "KeyFrame " << keyFrameId << " was captured by camera " << cameraId << std::endl;
         validateCameraParameters(pKF, cameraPtr);
         if (cameraPtrs.find(cameraId) == cameraPtrs.end()) {
@@ -263,7 +263,8 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
     Example cameras.txt
     See https://colmap.github.io/format.html#cameras-txt
     # Camera list with one line of data per camera:
-    #   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]
+    #   (prior_focal_length is a boolean as integer, and this entry was missing from earlier colmap versions)
+    #   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[], PRIOR_FOCAL_LENGTH
     # Number of cameras: 3
     1 SIMPLE_PINHOLE 3072 2304 2559.81 1536 1152
     2 PINHOLE 3072 2304 2560.56 2560.56 1536 1152
@@ -279,7 +280,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
     size_t num_cameras = 0;
     for (auto const& it : cameraPtrs) {
         GeometricCamera* cameraPtr = it.second;
-        unsigned int cameraId = cameraPtr->GetId();
+        unsigned int cameraId = cameraPtr->GetId(); // NOTE we could increase IDs by 1 because colmap does not like ID 0
         cameras_file << cameraId;
         assert(cameraSizes.find(cameraId) != cameraSizes.end());
         // see https://github.com/colmap/colmap/blob/master/src/base/camera_models.h
@@ -298,6 +299,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
                 // this Colmap camera model has fx, fy, cx, cy
                 cameras_file << " " << cameraSizes[cameraId].width;
                 cameras_file << " " << cameraSizes[cameraId].height;
+                cameras_file << setprecision(6);
                 cameras_file << " " << fx << " " << fy << " " << cx << " " << cy;
             } else if (cameraDistortion.total() == 4 ||
                 (cameraDistortion.total() == 5 && cameraDistortion.at<float>(4) == 0.0) ) {
@@ -342,6 +344,10 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         else {
             throw std::runtime_error("Unexpected camera type");
         }
+
+        // prior_focal_length (1/0 for true/false) - this tells colmap that the camera parameters are already quite good
+        cameras_file << " " << int(1);
+
         cameras_file << std::endl;
         num_cameras++;
     }
