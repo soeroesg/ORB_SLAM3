@@ -171,22 +171,33 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
             cameraDistortions.insert(std::make_pair(cameraId, cameraDisortion));
         }
 
+        // NOTE:
+        // ORBSLAM coordinate system is X to the right, Y down, Z forward
+        // Colmap cooridnate system: X to the right, Y down, Z forward
+        // But ORBSLAM stores the world pose in camera frame, but colmap wants the camera in world frame,
+        // therefore we need to inverse the poses
         if (ORBSLAM3System.mSensor == System::eSensor::IMU_MONOCULAR ||
             ORBSLAM3System.mSensor == System::eSensor::IMU_STEREO) {
 
-            cv::Mat R = pKF->GetImuRotation().t();
-            std::vector<float> q = Converter::toQuaternion(R);
-            cv::Mat twb = pKF->GetImuPosition();
+            cv::Mat R_c = pKF->GetImuRotation().t(); // NOTE: the other exporters also take the inverse here when IMU pose is used. why?
+            assert(Converter::isRotationMatrix(R_c));
+            cv::Mat R_c_inv = R_c.t(); // inverse is just the transpose
+            std::vector<float> q = Converter::toQuaternion(R_c_inv);
+            cv::Mat t_c = pKF->GetImuPosition();
+            cv::Mat t = (-1) * (R_c_inv * t_c);
             // warning: q.w comes first!
             images_file << keyFrameId
                 << setprecision(6)
                 << " " << q[3] << " " << q[0] << " " << q[1] << " " << q[2]
-                << " " << twb.at<float>(0) << " " << twb.at<float>(1) << " " << twb.at<float>(2);
+                << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2);
         }
         else {
-            cv::Mat R = pKF->GetRotation();
-            std::vector<float> q = Converter::toQuaternion(R);
-            cv::Mat t = pKF->GetCameraCenter();
+            cv::Mat R_c = pKF->GetRotation();
+            assert(Converter::isRotationMatrix(R_c));
+            cv::Mat R_c_inv = R_c.t(); // inverse is just the transpose
+            std::vector<float> q = Converter::toQuaternion(R_c_inv);
+            cv::Mat t_c = pKF->GetCameraCenter();
+            cv::Mat t = (-1) * (R_c_inv * t_c);
             // warning: q.w comes first!
             images_file << keyFrameId
                 << setprecision(6)
