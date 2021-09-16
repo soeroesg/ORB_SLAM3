@@ -192,12 +192,19 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
                 << " " << t.at<float>(0) << " " << t.at<float>(1) << " " << t.at<float>(2);
         }
         else {
-            cv::Mat R_c = pKF->GetRotation();
-            assert(Converter::isRotationMatrix(R_c));
-            cv::Mat R_c_inv = R_c.t(); // inverse is just the transpose
-            std::vector<float> q = Converter::toQuaternion(R_c_inv);
-            cv::Mat t_c = pKF->GetCameraCenter();
-            cv::Mat t = (-1) * (R_c_inv * t_c);
+            cv::Mat R_cw = pKF->GetRotation();
+            assert(Converter::isRotationMatrix(R_cw));
+            std::vector<float> q_cw = Converter::toQuaternion(R_cw);
+            cv::Mat R_wc = R_cw.t(); // inverse is just the transpose
+            std::vector<float> q_wc = Converter::toQuaternion(R_wc);
+            cv::Mat t_cw = pKF->GetTranslation();
+            cv::Mat t_wc = -R_wc*t_cw; //cv::Mat t_wc = pKF->GetCameraCenter(); // The camera position in the world
+
+            // colmap expects not the "camera in the world" but the "world in the camera" transform
+            // which is the same as T_cw internally in ORBSLAM3
+            std::vector<float>& q = q_cw;
+            const cv::Mat& t = t_cw;
+
             // warning: q.w comes first!
             images_file << keyFrameId
                 << setprecision(6)
@@ -274,12 +281,14 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
     Example cameras.txt
     See https://colmap.github.io/format.html#cameras-txt
     # Camera list with one line of data per camera:
-    #   (prior_focal_length is a boolean as integer, and this entry was missing from earlier colmap versions)
-    #   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[], PRIOR_FOCAL_LENGTH
+    #   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]
     # Number of cameras: 3
     1 SIMPLE_PINHOLE 3072 2304 2559.81 1536 1152
     2 PINHOLE 3072 2304 2560.56 2560.56 1536 1152
     3 SIMPLE_RADIAL 3072 2304 2559.69 1536 1152 -0.0218531
+
+    // In addition, prior_focal_length can be set in the database, which tells colmap that the camera parameters are already quite good.
+    // It is a boolean stored as integer, and this entry is not stored in the cameras.txt)
     */
     std::string cameras_filename = path + "/cameras.txt";
     std::ofstream cameras_file;
@@ -357,7 +366,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         }
 
         // prior_focal_length (1/0 for true/false) - this tells colmap that the camera parameters are already quite good
-        cameras_file << " " << int(1);
+        //cameras_file << " " << int(1); // do NOT write this into the file. It should be set in the database only
 
         cameras_file << std::endl;
         num_cameras++;
