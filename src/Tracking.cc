@@ -1735,7 +1735,7 @@ bool Tracking::ParseIMUParam(cvsl::Camera* pCamera)
     cvsl::IMUParam param = pCamera->ParamIMU();
     bool b_miss_params = false;
 
-    cv::Matx44f Tbc = pCamera->GetPose(cvsl::Camera::POSE_IMU_LEFTCAM);
+    cv::Matx44f Tbc = pCamera->GetPose(cvsl::Camera::POSE_IMU_CAM0RECT);
     if(Tbc.rows != 4 || Tbc.cols != 4)
     {
         std::cerr << "*Tbc matrix have to be a 4x4 transformation matrix*" << std::endl;

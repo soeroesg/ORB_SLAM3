@@ -25,6 +25,7 @@
 #ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
 #include <cvsl/DBoW2/BowVector.h>
 #include <cvsl/DBoW2/FeatureVector.h>
+#include <cvsl/core/analytics.h>
 #else
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"

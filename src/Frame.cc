@@ -116,10 +116,16 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_StartExtORB = std::chrono::steady_clock::now();
 #endif
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    cvsl::Analytics::TimerTic("FeatureExtraction");
+#endif
     thread threadLeft(&Frame::ExtractORB,this,0,imLeft,0,0);
     thread threadRight(&Frame::ExtractORB,this,1,imRight,0,0);
     threadLeft.join();
     threadRight.join();
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    cvsl::Analytics::TimerToc("FeatureExtraction");
+#endif
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_EndExtORB = std::chrono::steady_clock::now();
 
@@ -140,7 +146,13 @@ Frame::Frame(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timeSt
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_StartStereoMatches = std::chrono::steady_clock::now();
 #endif
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    cvsl::Analytics::TimerTic("FeatureMatching");
+#endif
     ComputeStereoMatches();
+#ifdef CVSL_ENABLE_SYSTEM_ORBSLAM3
+    cvsl::Analytics::TimerToc("FeatureMatching");
+#endif
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_EndStereoMatches = std::chrono::steady_clock::now();
 
