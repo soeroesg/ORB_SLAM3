@@ -180,6 +180,11 @@ if(realsense2_FOUND)
   target_link_libraries(${PROJECT_NAME} PRIVATE ${realsense2_LIBRARY})
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+  message(STATUS "Compiling with GCC, but version is less than 9, therefore linking with stdc++fs is needed.")
+  target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
+endif()
+
 if(${CMAKE_CXX_STANDARD} LESS 17 AND ${OpenCV_VERSION_MAJOR} LESS 4)
   find_package(Boost REQUIRED COMPONENTS serialization filesystem)
 else()

@@ -12,7 +12,14 @@
 #include <opencv2/core/version.hpp>
 #if(__cplusplus >= 201703L)
   #define OS3_USE_STD_FILESYSTEM 1
-  #include <filesystem> //only available in C++17
+  #if defined(__GNUC__) && __GNUC__ < 8
+    #include <experimental/filesystem> // it is still in experimental folder and namespace in GCC 7.5 (Ubuntu 18)
+    namespace std {
+        namespace filesystem = experimental::filesystem;
+    }
+  #else
+    #include <filesystem> //only available in C++17
+  #endif
 #elif(CV_VERSION_MAJOR >= 4)
   #define OS3_USE_CV_FILESYSTEM 1
   #include <opencv2/core/utils/filesystem.hpp> // only available in OpenCV 3.4
