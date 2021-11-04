@@ -153,17 +153,17 @@ System::System(cvsl::Parameter &params, cvsl::Camera *pCamera) :
     cvsl::Agent(pCamera, params), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false), mbResetActiveMap(false),
     mbActivateLocalizationMode(false), mbDeactivateLocalizationMode(false)
 {
-    if(pCamera->GetType() == cvsl::Camera::STEREO) {
+    if(pCamera->GetType() == cvsl::Camera::TYPE_STEREO) {
         if(pCamera->imu()) {
             params.set<int>("sys.sensor", IMU_STEREO);
         } else {
             params.set<int>("sys.sensor", STEREO);
         }
     }
-    if(pCamera->GetType() == cvsl::Camera::RGBD) {
+    if(pCamera->GetType() == cvsl::Camera::TYPE_RGBD) {
         params.set<int>("sys.sensor", RGBD);
     }
-    if(pCamera->GetType() == cvsl::Camera::MONOCULAR) {
+    if(pCamera->GetType() == cvsl::Camera::TYPE_MONOCULAR) {
         params.set<int>("sys.sensor", MONOCULAR);
     }
     mSensor = (eSensor) params.get<int>("sys.sensor");
