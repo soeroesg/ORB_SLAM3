@@ -291,7 +291,7 @@ cv::Mat System::Track(cvsl::Frame &f)
     if(mpCam->GetType() == RGBD) {
         return TrackRGBD(f.mImLeft, f.mImDepth, f.Times::Get().s());
     }
-    return cv::Mat::eye(4, 4, CV_32F);
+    return cv::Mat();
 }
 
 cv::Mat System::GetPose()
@@ -343,6 +343,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
         unique_lock<mutex> lock(mMutexReset);
         if(mbReset)
         {
+            return cv::Mat();
             mpTracker->Reset();
             cout << "Reset stereo..." << endl;
             mbReset = false;
@@ -350,6 +351,7 @@ cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const
         }
         else if(mbResetActiveMap)
         {
+            return cv::Mat();
             mpTracker->ResetActiveMap();
             mbResetActiveMap = false;
         }
