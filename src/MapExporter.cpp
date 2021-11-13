@@ -347,7 +347,12 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
                 cameras_file << " " << cameraSizes[cameraId].height;
                 cameras_file << " " << fx << " " << fy << " " << cx << " " << cy;
                 for (int d_idx = 0; d_idx < 8; d_idx++) {
-                    cameras_file << " " << (d_idx < cameraDistortion.total()) ? cameraDistortion.at<float>(d_idx) : 0.0;
+                    float d_coeff = 0.0f;
+                    if (d_idx < cameraDistortion.total()) {
+                        d_coeff = cameraDistortion.at<float>(d_idx);
+                    }
+                    // explicit float, otherwise it gets exported as (truncated) integer
+                    cameras_file << " " << (float)(d_coeff);
                 }
             }
         }
