@@ -182,7 +182,7 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
   message(STATUS "Compiling with GCC, but version is less than 9, therefore linking with stdc++fs is needed.")
-  target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
+  target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
 endif()
 
 if(${CMAKE_CXX_STANDARD} LESS 17 AND ${OpenCV_VERSION_MAJOR} LESS 4)

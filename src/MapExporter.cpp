@@ -100,6 +100,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
 
     // Gather all keyframes from all sub-maps
     std::vector<Map*> vpMaps = ORBSLAM3System.mpAtlas->GetAllMaps();
+    std::cout << "There are " << vpMaps.size() << " maps in the atlas" << std::endl;
     Map* pLargestMap = nullptr;
     int maxNumKFs = 0;
     for (Map* pMap : vpMaps) {
@@ -113,6 +114,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         return;
     }
     std::vector<KeyFrame*> vpKFs = pLargestMap->GetAllKeyFrames();
+    std::cout << "There are " << vpKFs.size() << " keyframes in the largest map" << std::endl;
     std::sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
 
 
@@ -161,7 +163,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
         // check whether we have already stored this camera
         GeometricCamera* cameraPtr = pKF->mpCamera;
         unsigned int cameraId = cameraPtr->GetId(); // NOTE we could increase IDs by 1 because colmap does not like ID 0
-        std::cout << "KeyFrame " << keyFrameId << " was captured by camera " << cameraId << std::endl;
+        //std::cout << "KeyFrame " << keyFrameId << " was captured by camera " << cameraId << std::endl;
         validateCameraParameters(pKF, cameraPtr);
         if (cameraPtrs.find(cameraId) == cameraPtrs.end()) {
             // we have not seen this camera before
@@ -170,7 +172,7 @@ void MapExporter::SaveKeyFrameTrajectoryColmap(const System& ORBSLAM3System, con
             // NOTE: the original ORB_SLAM3 does not store the input image so this is empty.
             // however, our modified version has a setting for storing the input images within the keyframes.
             cv::Size cameraSize = pKF->imageSize;
-            if (cameraSize.empty()) {
+            if (!cameraSize.area()) {
                 std::cout << "WARNING: camera " + std::to_string(cameraId) + " seems to have 0 image size" << std::endl;
             }
             cameraSizes.insert(std::make_pair(cameraId, cameraSize));

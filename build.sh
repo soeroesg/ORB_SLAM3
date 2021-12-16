@@ -1,6 +1,6 @@
 # Set this path. Dependencies are assumed to be installed to this folder:
-#ORBSLAM3_DEPENDENCIES_INSTALL_DIR="/home/esoptron/dev/slamtest/install"
-ORBSLAM3_DEPENDENCIES_INSTALL_DIR=""
+ORBSLAM3_DEPENDENCIES_INSTALL_DIR="$HOME/dev/slamtest/install"
+#ORBSLAM3_DEPENDENCIES_INSTALL_DIR=""
 echo "ORBSLAM3_DEPENDENCIES_INSTALL_DIR=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR"
 
 
