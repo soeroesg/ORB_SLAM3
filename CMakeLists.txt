@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 project(ORB_SLAM3)
 
 # Build type (default to Release)
@@ -25,10 +25,9 @@ endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
-  # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-deprecated -O3 -march=native ")
-  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated -O3 -march=native")
+  message(STATUS "ORB_SLAM3 is using compiler flag -march=native. Make sure all relevant libraries are consistent with this.")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_RELEASE} -march=native")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 endif()
 # Compiler specific options for MSVC
 if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -67,7 +66,8 @@ IF(WIN32)
   # Note that the ideal solution would be to add an export API to the relevant classes.
 ENDIF(WIN32)
 
-add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
+
+set(ORB_SLAM3_SOURCES
   src/System.cc
   src/Tracking.cc
   src/LocalMapping.cc
@@ -96,6 +96,9 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   src/TwoViewReconstruction.cc
   src/Config.cc
   src/Settings.cc
+)
+
+set(ORB_SLAM3_HEADERS
   include/System.h
   include/Tracking.h
   include/LocalMapping.h
@@ -128,33 +131,57 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   include/Settings.h
 )
 
+add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
+  ${ORB_SLAM3_HEADERS} ${ORB_SLAM3_SOURCES}
+)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/include
   ${PROJECT_SOURCE_DIR}/include/CameraModels
 )
 
-
+option(ORB_SLAM3_USE_OWN_DBOW2 "Use DBoW2 from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_g2o "Use g2o from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_hashlibpp "Use hashlibpp from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_Sophus "Use Sophus from Thirdparty folder" TRUE)
 
 # Dependencies
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 # DBoW2
-add_subdirectory(Thirdparty/DBoW2)
+if(ORB_SLAM3_USE_OWN_DBOW2)
+  add_subdirectory(Thirdparty/DBoW2)
+else()
+  find_package(DBoW2 REQUIRED)
+endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE DBoW2)
 
 # G2O
-add_subdirectory(Thirdparty/g2o)
+if(ORB_SLAM3_USE_OWN_g2o)
+  add_subdirectory(Thirdparty/g2o)
+else()
+  find_package(g2o REQUIRED)
+endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE g2o)
 
 # Sophus
-# (include public because used in OS3 headers)
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus)
+if(ORB_SLAM3_USE_OWN_Sophus)
+  # (include public because used in OS3 headers)
+  target_include_directories(${PROJECT_NAME} PUBLIC
+    ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus)
+else()
+  find_package(Sophus REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PUBLIC Sophus)
+endif()
 
 # hashlibpp
-add_subdirectory(Thirdparty/hashlibpp)
+if(ORB_SLAM3_USE_OWN_hashlibpp)
+  add_subdirectory(Thirdparty/hashlibpp)
+else()
+  find_package(hashlibpp REQUIRED)
+endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE hashlibpp)
 target_compile_definitions(${PROJECT_NAME} PRIVATE USE_HASHLIBPP)
 
