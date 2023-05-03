@@ -25,6 +25,10 @@ endif()
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+
+  # suppress warnings about deprecations (many in Eigen)
+  add_compile_options("-Wno-deprecated-declarations")
+
   message(STATUS "ORB_SLAM3 is using compiler flag -march=native. Make sure all relevant libraries are consistent with this.")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_RELEASE} -march=native")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
