@@ -262,11 +262,84 @@ if(ORB_SLAM3_BUILD_EXAMPLES_OLD)
 endif()
 
 
+# Install
 
+# Set standard installation directories
+set(RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+set(LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDES_DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+set(INCLUDES_INSTALL_DIR ${INCLUDES_DESTINATION}/${TARGET_ORB_SLAM3})
+set(CMAKECONFIG_INSTALL_DIR ${LIBRARY_DESTINATION}/cmake/${TARGET_ORB_SLAM3})
 
+# This relative path allows installed files to be relocatable.
+file(RELATIVE_PATH REL_INCLUDE_DIR
+    "${CMAKECONFIG_INSTALL_DIR}"
+    "${INCLUDES_INSTALL_DIR}"
+)
+set(EXPORT_LIB_INC_DIR "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/${TARGET_ORB_SLAM3}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${TARGET_ORB_SLAM3}Config.cmake
+    @ONLY
+)
 
+file(GLOB ORB_SLAM3_HEADERS "include/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR})
+file(GLOB ORB_SLAM3_HEADERS "include/CameraModels/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR}/CameraModels)
 
+install(TARGETS ${TARGET_ORB_SLAM3}
+    RUNTIME DESTINATION ${RUNTIME_DESTINATION}
+    LIBRARY DESTINATION ${LIBRARY_DESTINATION}
+    ARCHIVE DESTINATION ${ARCHIVE_DESTINATION}
+    INCLUDES DESTINATION ${INCLUDES_DESTINATION}
+)
+
+export(PACKAGE ${TARGET_ORB_SLAM3})
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${TARGET_ORB_SLAM3}Config.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+
+# install subprojects
+if(ORB_SLAM3_USE_OWN_DBoW2)
+    #install(FILES Thirdparty/DBoW2/lib/libDBoW2.so DESTINATION ${LIBRARY_DESTINATION})
+    install(TARGETS DBoW2 DESTINATION ${LIBRARY_DESTINATION})
+    # HACK: copy the DBoW2 headers because the own version has no package install
+    install(FILES
+        Thirdparty/DBoW2/DBoW2/BowVector.h
+        Thirdparty/DBoW2/DBoW2/FClass.h
+        Thirdparty/DBoW2/DBoW2/FeatureVector.h
+        Thirdparty/DBoW2/DBoW2/FORB.h
+        Thirdparty/DBoW2/DBoW2/ScoringObject.h
+        Thirdparty/DBoW2/DBoW2/TemplatedVocabulary.h
+        DESTINATION ${INCLUDES_DESTINATION}/DBoW2/DBoW2)
+    install(FILES
+        FILES Thirdparty/DBoW2/DUtils/Random.h
+        FILES Thirdparty/DBoW2/DUtils/Timestamp.h
+        DESTINATION ${INCLUDES_DESTINATION}/DBoW2/DUtils
+    )
 endif()
+if(ORB_SLAM3_USE_OWN_g2o)
+    #install(FILES Thirdparty/gREQUIRED2o/lib/libg2o.so DESTINATION ${LIBRARY_DESTINATION})
+    install(TARGETS g2o DESTINATION ${LIBRARY_DESTINATION})
+    # HACK: copy the DBoW2 headers because the own version has no package install
+    install(FILES "Thirdparty/g2o/config.h" DESTINATION ${INCLUDES_DESTINATION}/g2o)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/core/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/core/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/core)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/solvers/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/solvers/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/solvers)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/stuff/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/stuff/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/stuff)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/types/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/types/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/types)
 endif()
+if(ORB_SLAM3_USE_OWN_Sophus)
+    install(TARGETS sophus DESTINATION ${LIBRARY_DESTINATION})
 endif()
 
+# TODO: extract and copy the vocabulary into the bin folder

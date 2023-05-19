@@ -1,15 +1,16 @@
 # Set this path. Dependencies are assumed to be installed to this folder:
-#ORBSLAM3_DEPENDENCIES_INSTALL_DIR="/home/esoptron/dev/slamtest/install"
-ORBSLAM3_DEPENDENCIES_INSTALL_DIR="/home/esoptron/dev/navigation_ws/install"
-echo "ORBSLAM3_DEPENDENCIES_INSTALL_DIR=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR"
+#ORBSLAM3_INSTALL_DIR="$HOME/dev/slamtest/install"
+ORBSLAM3_INSTALL_DIR=""
+echo "ORBSLAM3_INSTALL_DIR=$ORBSLAM3_INSTALL_DIR"
 
+# Note: no need for separately building third-party libraries, these will be built by the main CMakeLists.
 #echo "Configuring and building Thirdparty/DBoW2 ..."
 #cd Thirdparty/DBoW2
 #mkdir build
 #cd build
 #cmake .. \
 #  -DCMAKE_BUILD_TYPE=Release \
-#  -DCMAKE_PREFIX_PATH=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR
+#  -DCMAKE_PREFIX_PATH=$ORBSLAM3_INSTALL_DIR
 #make -j2
 #
 #echo "Configuring and building Thirdparty/g2o ..."
@@ -18,7 +19,7 @@ echo "ORBSLAM3_DEPENDENCIES_INSTALL_DIR=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR"
 #cd build
 #cmake .. \
 #  -DCMAKE_BUILD_TYPE=Release \
-#  -DCMAKE_PREFIX_PATH=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR
+#  -DCMAKE_PREFIX_PATH=$ORBSLAM3_INSTALL_DIR
 #make -j2
 #
 #echo "Configuring and building Thirdparty/Sophus ..."
@@ -39,7 +40,18 @@ mkdir build
 cd build
 cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_PREFIX_PATH=$ORBSLAM3_DEPENDENCIES_INSTALL_DIR
-make -j2
-cd ..
+  -DCMAKE_PREFIX_PATH=$ORBSLAM3_INSTALL_DIR \
+  -DCMAKE_INSTALL_PREFIX=$ORBSLAM3_INSTALL_DIR
 
+# Build
+make -j2
+
+# Install (optional)
+if [ "$ORBSLAM3_INSTALL_DIR" = "" ]; then
+	echo "ORBSLAM3_INSTALL_DIR is empty!"
+else
+	echo "Installing to $ORBSLAM3_INSTALL_DIR"
+	make install
+fi
+
+cd ..
