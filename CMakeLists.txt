@@ -93,14 +93,14 @@ set(ORB_SLAM3_SOURCES
   src/Viewer.cc
   src/ImuTypes.cc
   src/G2oTypes.cc
-  src/CameraModels/Pinhole.cpp
-  src/CameraModels/KannalaBrandt8.cpp
   src/OptimizableTypes.cpp
   src/MLPnPsolver.cpp
   src/GeometricTools.cc
   src/TwoViewReconstruction.cc
   src/Config.cc
   src/Settings.cc
+  src/CameraModels/Pinhole.cpp
+  src/CameraModels/KannalaBrandt8.cpp
 )
 
 set(ORB_SLAM3_HEADERS
@@ -124,9 +124,6 @@ set(ORB_SLAM3_HEADERS
   include/Viewer.h
   include/ImuTypes.h
   include/G2oTypes.h
-  include/CameraModels/GeometricCamera.h
-  include/CameraModels/Pinhole.h
-  include/CameraModels/KannalaBrandt8.h
   include/OptimizableTypes.h
   include/MLPnPsolver.h
   include/GeometricTools.h
@@ -134,6 +131,9 @@ set(ORB_SLAM3_HEADERS
   include/SerializationUtils.h
   include/Config.h
   include/Settings.h
+  include/CameraModels/GeometricCamera.h
+  include/CameraModels/Pinhole.h
+  include/CameraModels/KannalaBrandt8.h
 )
 
 add_library(${TARGET_ORB_SLAM3} ${ORB_SLAM3_LIB_TYPE}
@@ -141,9 +141,10 @@ add_library(${TARGET_ORB_SLAM3} ${ORB_SLAM3_LIB_TYPE}
 )
 
 target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include
-  ${PROJECT_SOURCE_DIR}/include/CameraModels
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CameraModels>
+  $<INSTALL_INTERFACE:${TARGET_ORB_SLAM3}/include>
+  $<INSTALL_INTERFACE:${TARGET_ORB_SLAM3}/include/CameraModels>
 )
 
 option(ORB_SLAM3_USE_OWN_DBoW2 "Use DBoW2 from Thirdparty folder" TRUE)
@@ -160,7 +161,10 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 # DBoW2
 if(ORB_SLAM3_USE_OWN_DBoW2)
   add_subdirectory(Thirdparty/DBoW2)
-  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/DBoW2)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2>
+      $<INSTALL_INTERFACE:DBoW2>
+  )
 else()
   find_package(DBoW2 REQUIRED)
 endif()
@@ -169,7 +173,10 @@ target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC DBoW2)
 # G2O
 if(ORB_SLAM3_USE_OWN_g2o)
   add_subdirectory(Thirdparty/g2o)
-  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/g2o)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/g2o>
+      $<INSTALL_INTERFACE:g2o>
+  )
 else()
   find_package(g2o REQUIRED)
 endif()
@@ -182,7 +189,10 @@ if(ORB_SLAM3_USE_OWN_Sophus)
   set(BUILD_EXAMPLES OFF)
   add_subdirectory(Thirdparty/Sophus)
   # (include public because used in OS3 headers)
-  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/Sophus)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}Thirdparty/Sophus>
+      $<INSTALL_INTERFACE:>
+  )
 else()
   find_package(Sophus REQUIRED)
 endif()
@@ -236,6 +246,7 @@ target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${Pangolin_LIBRARIES})
 find_package(realsense2)
 if(realsense2_FOUND)
   message(STATUS "realsense2_VERSION: ${realsense2_VERSION}")
+  target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${realsense2_LIBRARY}) # TODO: move these to the examples only
 endif()
 
 # Boost
@@ -272,34 +283,13 @@ set(INCLUDES_DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
 set(INCLUDES_INSTALL_DIR ${INCLUDES_DESTINATION}/${TARGET_ORB_SLAM3})
 set(CMAKECONFIG_INSTALL_DIR ${LIBRARY_DESTINATION}/cmake/${TARGET_ORB_SLAM3})
 
-# This relative path allows installed files to be relocatable.
+# this relative path allows installed files to be relocatable.
 file(RELATIVE_PATH REL_INCLUDE_DIR
     "${CMAKECONFIG_INSTALL_DIR}"
     "${INCLUDES_INSTALL_DIR}"
 )
-set(EXPORT_LIB_INC_DIR "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/${TARGET_ORB_SLAM3}Config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${TARGET_ORB_SLAM3}Config.cmake
-    @ONLY
-)
-
-file(GLOB ORB_SLAM3_HEADERS "include/*.h")
-install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR})
-file(GLOB ORB_SLAM3_HEADERS "include/CameraModels/*.h")
-install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR}/CameraModels)
-
-install(TARGETS ${TARGET_ORB_SLAM3}
-    RUNTIME DESTINATION ${RUNTIME_DESTINATION}
-    LIBRARY DESTINATION ${LIBRARY_DESTINATION}
-    ARCHIVE DESTINATION ${ARCHIVE_DESTINATION}
-    INCLUDES DESTINATION ${INCLUDES_DESTINATION}
-)
-
-export(PACKAGE ${TARGET_ORB_SLAM3})
-install(
-    FILES "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${TARGET_ORB_SLAM3}Config.cmake"
-    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
-)
+set(EXPORT_LIB_INC_DIRS "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/CameraModels")
 
 # install subprojects
 if(ORB_SLAM3_USE_OWN_DBoW2)
@@ -319,6 +309,8 @@ if(ORB_SLAM3_USE_OWN_DBoW2)
         FILES Thirdparty/DBoW2/DUtils/Timestamp.h
         DESTINATION ${INCLUDES_DESTINATION}/DBoW2/DUtils
     )
+    install(TARGETS DBoW2 EXPORT ${TARGET_ORB_SLAM3}Targets)
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/../DBoW2")
 endif()
 if(ORB_SLAM3_USE_OWN_g2o)
     #install(FILES Thirdparty/gREQUIRED2o/lib/libg2o.so DESTINATION ${LIBRARY_DESTINATION})
@@ -337,9 +329,46 @@ if(ORB_SLAM3_USE_OWN_g2o)
     file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/types/*.h")
     file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/types/*.hpp")
     install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/types)
+    install(TARGETS g2o EXPORT ${TARGET_ORB_SLAM3}Targets)
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/../g2o")
 endif()
 if(ORB_SLAM3_USE_OWN_Sophus)
     install(TARGETS sophus DESTINATION ${LIBRARY_DESTINATION})
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/..")
 endif()
+
+# install headers
+file(GLOB ORB_SLAM3_HEADERS "include/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR})
+file(GLOB ORB_SLAM3_HEADERS "include/CameraModels/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR}/CameraModels)
+
+# install libraries
+install(TARGETS ${TARGET_ORB_SLAM3}
+    EXPORT ${TARGET_ORB_SLAM3}Targets
+    RUNTIME DESTINATION ${RUNTIME_DESTINATION}
+    LIBRARY DESTINATION ${LIBRARY_DESTINATION}
+    ARCHIVE DESTINATION ${ARCHIVE_DESTINATION}
+    INCLUDES DESTINATION ${INCLUDES_DESTINATION}
+)
+
+# write package config files
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}ConfigVersion.cmake"
+    VERSION 1.0
+    COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/ORB_SLAM3Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
+    INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+install(EXPORT ${TARGET_ORB_SLAM3}Targets DESTINATION lib/cmake/cvsl)
+install(FILES "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}ConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+
 
 # TODO: extract and copy the vocabulary into the bin folder

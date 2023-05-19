@@ -180,9 +180,14 @@ add_library(${G2O_TARGET} ${G2O_LIB_TYPE}
 )
 
 target_include_directories(${G2O_TARGET} PUBLIC
-  ${G2O_SOURCE_DIR}/core
-  ${G2O_SOURCE_DIR}/types
-  ${G2O_SOURCE_DIR}/stuff
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/core>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/solvers>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/stuff>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/types>
+  $<INSTALL_INTERFACE:${$G2O_TARGET}/core>
+  $<INSTALL_INTERFACE:${$G2O_TARGET}/solvers>
+  $<INSTALL_INTERFACE:${$G2O_TARGET}/stuff>
+  $<INSTALL_INTERFACE:${$G2O_TARGET}/types>
 )
 
 
