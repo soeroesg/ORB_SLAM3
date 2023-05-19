@@ -143,8 +143,8 @@ add_library(${TARGET_ORB_SLAM3} ${ORB_SLAM3_LIB_TYPE}
 target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CameraModels>
-  $<INSTALL_INTERFACE:${TARGET_ORB_SLAM3}/include>
-  $<INSTALL_INTERFACE:${TARGET_ORB_SLAM3}/include/CameraModels>
+  $<INSTALL_INTERFACE:include/${TARGET_ORB_SLAM3}>
+  $<INSTALL_INTERFACE:include/${TARGET_ORB_SLAM3}/CameraModels>
 )
 
 option(ORB_SLAM3_USE_OWN_DBoW2 "Use DBoW2 from Thirdparty folder" TRUE)
@@ -163,7 +163,7 @@ if(ORB_SLAM3_USE_OWN_DBoW2)
   add_subdirectory(Thirdparty/DBoW2)
   target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2>
-      $<INSTALL_INTERFACE:DBoW2>
+      $<INSTALL_INTERFACE:include/DBoW2>
   )
 else()
   find_package(DBoW2 REQUIRED)
@@ -175,7 +175,7 @@ if(ORB_SLAM3_USE_OWN_g2o)
   add_subdirectory(Thirdparty/g2o)
   target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
       $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/g2o>
-      $<INSTALL_INTERFACE:g2o>
+      $<INSTALL_INTERFACE:include/g2o>
   )
 else()
   find_package(g2o REQUIRED)
@@ -247,6 +247,7 @@ find_package(realsense2)
 if(realsense2_FOUND)
   message(STATUS "realsense2_VERSION: ${realsense2_VERSION}")
   target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${realsense2_LIBRARY}) # TODO: move these to the examples only
+  set(ORB_SLAM3_DEPENDENCY_realsense2 "find_dependency(realsense2 REQUIRED)")
 endif()
 
 # Boost
@@ -364,7 +365,8 @@ configure_package_config_file(
     "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
     INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR}
 )
-install(EXPORT ${TARGET_ORB_SLAM3}Targets DESTINATION lib/cmake/cvsl)
+install(EXPORT ${TARGET_ORB_SLAM3}Targets
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR})
 install(FILES "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}ConfigVersion.cmake"
     "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
     DESTINATION ${CMAKECONFIG_INSTALL_DIR}

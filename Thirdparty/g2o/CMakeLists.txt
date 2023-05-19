@@ -184,10 +184,10 @@ target_include_directories(${G2O_TARGET} PUBLIC
   $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/solvers>
   $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/stuff>
   $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/types>
-  $<INSTALL_INTERFACE:${$G2O_TARGET}/core>
-  $<INSTALL_INTERFACE:${$G2O_TARGET}/solvers>
-  $<INSTALL_INTERFACE:${$G2O_TARGET}/stuff>
-  $<INSTALL_INTERFACE:${$G2O_TARGET}/types>
+  $<INSTALL_INTERFACE:include/g2o/g2o/core>
+  $<INSTALL_INTERFACE:include/g2o/g2o/solvers>
+  $<INSTALL_INTERFACE:include/g2o/g2o/stuff>
+  $<INSTALL_INTERFACE:include/g2o/g2o/types>
 )
 
 
