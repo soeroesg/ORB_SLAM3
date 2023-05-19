@@ -21,8 +21,6 @@
 #define KEYFRAME_H
 
 #include "MapPoint.h"
-#include "Thirdparty/DBoW2/DBoW2/BowVector.h"
-#include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
 #include "ORBVocabulary.h"
 #include "ORBextractor.h"
 #include "Frame.h"
@@ -33,6 +31,9 @@
 #include "SerializationUtils.h"
 
 #include <mutex>
+
+#include "DBoW2/BowVector.h"
+#include "DBoW2/FeatureVector.h"
 
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/vector.hpp>

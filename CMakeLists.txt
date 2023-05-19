@@ -59,6 +59,7 @@ endif ()
 
 
 # Target definition
+set(TARGET_ORB_SLAM3 ORB_SLAM3)
 set(ORB_SLAM3_LIB_TYPE SHARED)
 IF(WIN32)
   # uncomment only one of the lines below:
@@ -145,7 +146,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include/CameraModels
 )
 
-option(ORB_SLAM3_USE_OWN_DBOW2 "Use DBoW2 from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_DBoW2 "Use DBoW2 from Thirdparty folder" TRUE)
 option(ORB_SLAM3_USE_OWN_g2o "Use g2o from Thirdparty folder" TRUE)
 option(ORB_SLAM3_USE_OWN_hashlibpp "Use hashlibpp from Thirdparty folder" TRUE)
 option(ORB_SLAM3_USE_OWN_Sophus "Use Sophus from Thirdparty folder" TRUE)
@@ -155,30 +156,35 @@ option(ORB_SLAM3_USE_OWN_Sophus "Use Sophus from Thirdparty folder" TRUE)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 # DBoW2
-if(ORB_SLAM3_USE_OWN_DBOW2)
+if(ORB_SLAM3_USE_OWN_DBoW2)
   add_subdirectory(Thirdparty/DBoW2)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/DBoW2)
 else()
   find_package(DBoW2 REQUIRED)
 endif()
-target_link_libraries(${PROJECT_NAME} PRIVATE DBoW2)
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC DBoW2)
 
 # G2O
 if(ORB_SLAM3_USE_OWN_g2o)
   add_subdirectory(Thirdparty/g2o)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/g2o)
 else()
   find_package(g2o REQUIRED)
 endif()
-target_link_libraries(${PROJECT_NAME} PRIVATE g2o)
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC g2o)
 
 # Sophus
 if(ORB_SLAM3_USE_OWN_Sophus)
+  set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+  set(BUILD_TESTS OFF)
+  set(BUILD_EXAMPLES OFF)
+  add_subdirectory(Thirdparty/Sophus)
   # (include public because used in OS3 headers)
-  target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC Thirdparty/Sophus)
 else()
   find_package(Sophus REQUIRED)
-  target_link_libraries(${PROJECT_NAME} PUBLIC Sophus)
 endif()
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC sophus)
 
 # hashlibpp
 if(ORB_SLAM3_USE_OWN_hashlibpp)
