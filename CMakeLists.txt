@@ -9,6 +9,7 @@ message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
 # Debug postfix
 set(CMAKE_DEBUG_POSTFIX "_d")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_rd")
 
 # Check C++11 support
 set(CMAKE_CXX_STANDARD 11)
@@ -255,9 +256,9 @@ find_package(Boost REQUIRED COMPONENTS serialization)
 message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
 target_link_libraries(${TARGET_ORB_SLAM3} PRIVATE ${Boost_LIBRARIES})
 
-# Backward
+# Backward-cpp
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-  find_package(Backward)
+  find_package(Backward REQUIRED)
   message(STATUS "BACKWARD_LIBRARIES: ${BACKWARD_LIBRARIES}")
   target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC Backward::Backward)
 endif()
