@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 set(DBOW2_TARGET "DBoW2")
 project(${DBOW2_TARGET})
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(DBOW2_LIB_TYPE SHARED)
 if(WIN32)
   set(DBOW2_LIB_TYPE STATIC)

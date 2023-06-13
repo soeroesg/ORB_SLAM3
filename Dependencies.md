@@ -1,5 +1,5 @@
 ##List of Known Dependencies
-###ORB-SLAM3 version 0.3
+###ORB-SLAM3 v1.0
 
 In this document we list all the pieces of code included  by ORB-SLAM3 and linked libraries which are not property of the authors of ORB-SLAM3.
 
@@ -28,6 +28,9 @@ This is a modified version of [DBoW2](https://github.com/dorian3d/DBoW2) and [DL
 
 * All code in **g2o** folder.
 This is a modified version of [g2o](https://github.com/RainerKuemmerle/g2o). All files included are BSD licensed.
+
+* All code in **Sophus** folder.
+This is a modified version of [Sophus](https://github.com/strasdat/Sophus). [MIT license](https://en.wikipedia.org/wiki/MIT_License).
 
 #####Library dependencies 
 
