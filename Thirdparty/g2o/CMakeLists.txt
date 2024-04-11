@@ -72,8 +72,9 @@ endif(OPENMP_FOUND AND G2O_USE_OPENMP)
 
 # Compiler specific options for gcc
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
-  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native")
+  # @soeroesg: this flag may result in memory freeing errors in libs that use g2o. disable it completetely.
+  #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+  #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -march=native")
   # activate warnings
   set(G2O_C_FLAGS "${G2O_C_FLAGS} -Wall -W")
   set(G2O_CXX_FLAGS "${G2O_CXX_FLAGS} -Wall -W")
