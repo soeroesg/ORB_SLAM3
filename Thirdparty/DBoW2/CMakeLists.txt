@@ -15,8 +15,11 @@ endif(WIN32)
 # Compiler options
 # Compiler specific options for gcc
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -march=native")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3 -march=native")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+  # @soeroesg: Disable this flag because it causes trouble with g2o
+  #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+  #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 endif()
 # Compiler specific options for MSVC
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
