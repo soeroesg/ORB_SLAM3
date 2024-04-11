@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 set(G2O_TARGET "g2o")
 project(${G2O_TARGET})
@@ -181,9 +181,14 @@ add_library(${G2O_TARGET} ${G2O_LIB_TYPE}
 )
 
 target_include_directories(${G2O_TARGET} PUBLIC
-  ${G2O_SOURCE_DIR}/core
-  ${G2O_SOURCE_DIR}/types
-  ${G2O_SOURCE_DIR}/stuff
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/core>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/solvers>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/stuff>
+  $<BUILD_INTERFACE:${G2O_SOURCE_DIR}/types>
+  $<INSTALL_INTERFACE:include/g2o/g2o/core>
+  $<INSTALL_INTERFACE:include/g2o/g2o/solvers>
+  $<INSTALL_INTERFACE:include/g2o/g2o/stuff>
+  $<INSTALL_INTERFACE:include/g2o/g2o/types>
 )
 
 

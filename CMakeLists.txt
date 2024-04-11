@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 project(ORB_SLAM3)
 
 # Build type (default to Release)
@@ -9,6 +9,7 @@ message(STATUS "Build type: " ${CMAKE_BUILD_TYPE})
 
 # Debug postfix
 set(CMAKE_DEBUG_POSTFIX "_d")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "_rd")
 
 # Check C++11 support
 set(CMAKE_CXX_STANDARD 11)
@@ -23,8 +24,12 @@ endif()
 
 # Compiler specific options for gcc
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-deprecated -O3")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated -O3")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+  
+  # suppress warnings about deprecations (many in Eigen)
+  add_compile_options("-Wno-deprecated-declarations")
+  
   # @soeroesg: Disable this flag because it causes trouble with g2o
   #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
   #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
@@ -55,6 +60,7 @@ endif ()
 
 
 # Target definition
+set(TARGET_ORB_SLAM3 ORB_SLAM3)
 set(ORB_SLAM3_LIB_TYPE SHARED)
 IF(WIN32)
   # uncomment only one of the lines below:
@@ -66,7 +72,8 @@ IF(WIN32)
   # Note that the ideal solution would be to add an export API to the relevant classes.
 ENDIF(WIN32)
 
-add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
+
+set(ORB_SLAM3_SOURCES
   src/System.cc
   src/Tracking.cc
   src/LocalMapping.cc
@@ -87,14 +94,17 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   src/Viewer.cc
   src/ImuTypes.cc
   src/G2oTypes.cc
-  src/CameraModels/Pinhole.cpp
-  src/CameraModels/KannalaBrandt8.cpp
   src/OptimizableTypes.cpp
   src/MLPnPsolver.cpp
   src/GeometricTools.cc
   src/TwoViewReconstruction.cc
   src/Config.cc
   src/Settings.cc
+  src/CameraModels/Pinhole.cpp
+  src/CameraModels/KannalaBrandt8.cpp
+)
+
+set(ORB_SLAM3_HEADERS
   include/System.h
   include/Tracking.h
   include/LocalMapping.h
@@ -115,9 +125,6 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   include/Viewer.h
   include/ImuTypes.h
   include/G2oTypes.h
-  include/CameraModels/GeometricCamera.h
-  include/CameraModels/Pinhole.h
-  include/CameraModels/KannalaBrandt8.h
   include/OptimizableTypes.h
   include/MLPnPsolver.h
   include/GeometricTools.h
@@ -125,45 +132,89 @@ add_library(${PROJECT_NAME} ${ORB_SLAM3_LIB_TYPE}
   include/SerializationUtils.h
   include/Config.h
   include/Settings.h
+  include/CameraModels/GeometricCamera.h
+  include/CameraModels/Pinhole.h
+  include/CameraModels/KannalaBrandt8.h
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/include
-  ${PROJECT_SOURCE_DIR}/include/CameraModels
+add_library(${TARGET_ORB_SLAM3} ${ORB_SLAM3_LIB_TYPE}
+  ${ORB_SLAM3_HEADERS} ${ORB_SLAM3_SOURCES}
 )
 
+target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CameraModels>
+  $<INSTALL_INTERFACE:include/${TARGET_ORB_SLAM3}>
+  $<INSTALL_INTERFACE:include/${TARGET_ORB_SLAM3}/CameraModels>
+)
 
+option(ORB_SLAM3_USE_OWN_DBoW2 "Use DBoW2 from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_g2o "Use g2o from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_hashlibpp "Use hashlibpp from Thirdparty folder" TRUE)
+option(ORB_SLAM3_USE_OWN_Sophus "Use Sophus from Thirdparty folder" TRUE)
+option(ORB_SLAM3_BUILD_EXAMPLES "Build examples" TRUE)
+option(ORB_SLAM3_BUILD_EXAMPLES_OLD "Build old examples" TRUE)
 
 # Dependencies
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 # DBoW2
-add_subdirectory(Thirdparty/DBoW2)
-target_link_libraries(${PROJECT_NAME} PRIVATE DBoW2)
+if(ORB_SLAM3_USE_OWN_DBoW2)
+  add_subdirectory(Thirdparty/DBoW2)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2>
+      $<INSTALL_INTERFACE:include/DBoW2>
+  )
+else()
+  find_package(DBoW2 REQUIRED)
+endif()
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC DBoW2)
 
 # G2O
-add_subdirectory(Thirdparty/g2o)
-target_link_libraries(${PROJECT_NAME} PRIVATE g2o)
+if(ORB_SLAM3_USE_OWN_g2o)
+  add_subdirectory(Thirdparty/g2o)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/g2o>
+      $<INSTALL_INTERFACE:include/g2o>
+  )
+else()
+  find_package(g2o REQUIRED)
+endif()
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC g2o)
 
 # Sophus
-# (include public because used in OS3 headers)
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus)
+if(ORB_SLAM3_USE_OWN_Sophus)
+  set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+  set(BUILD_TESTS OFF)
+  set(BUILD_EXAMPLES OFF)
+  add_subdirectory(Thirdparty/Sophus)
+  # (include public because used in OS3 headers)
+  target_include_directories(${TARGET_ORB_SLAM3} PUBLIC
+      $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}Thirdparty/Sophus>
+      $<INSTALL_INTERFACE:>
+  )
+else()
+  find_package(Sophus REQUIRED)
+endif()
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC sophus)
 
 # hashlibpp
-add_subdirectory(Thirdparty/hashlibpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE hashlibpp)
-target_compile_definitions(${PROJECT_NAME} PRIVATE USE_HASHLIBPP)
+if(ORB_SLAM3_USE_OWN_hashlibpp)
+  add_subdirectory(Thirdparty/hashlibpp)
+else()
+  find_package(hashlibpp REQUIRED)
+endif()
+target_link_libraries(${TARGET_ORB_SLAM3} PRIVATE hashlibpp)
+target_compile_definitions(${TARGET_ORB_SLAM3} PRIVATE USE_HASHLIBPP)
 
 # OpenSSL is used only in System.cc for MD5 hash calculation
 # but because OpenSSL is not trivial to compile on windows, we can use hashlibpp instead.
 #set(OPENSSL_USE_STATIC_LIBS TRUE)
 #find_package(OpenSSL) # for crypto library
 #if(OpenSSL_FOUND)
-#  target_include_directories(${PROJECT_NAME} ${OPENSSL_INCLUDE_DIR})
-#  target_link_libraries(${PROJECT_NAME} ${OPENSSL_CRYPTO_LIBRARY})
+#  target_include_directories(${TARGET_ORB_SLAM3} ${OPENSSL_INCLUDE_DIR})
+#  target_link_libraries(${TARGET_ORB_SLAM3} ${OPENSSL_CRYPTO_LIBRARY})
 #endif()
 
 # OpenCV
@@ -176,292 +227,151 @@ if(NOT OpenCV_FOUND)
 endif()
 message(STATUS "OpenCV VERSION: ${OpenCV_VERSION}")
 message(STATUS "OpenCV_LIBS: ${OpenCV_LIBS}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${OpenCV_LIBS})
 
 # Eigen
 find_package(Eigen3 3.1.0 REQUIRED)
-#target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
+#target_include_directories(${TARGET_ORB_SLAM3} PRIVATE ${EIGEN3_INCLUDE_DIR})
 message(STATUS "EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
 message(STATUS "Eigen3_VERSION: ${Eigen3_VERSION}")
-target_link_libraries(${PROJECT_NAME} PUBLIC Eigen3::Eigen)
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC Eigen3::Eigen)
 
 # Pangolin
 find_package(Pangolin REQUIRED)
-#target_include_directories(${PROJECT_NAME} PRIVATE ${Pangolin_INCLUDE_DIRS})
+#target_include_directories(${TARGET_ORB_SLAM3} PRIVATE ${Pangolin_INCLUDE_DIRS})
 message(STATUS "Pangolin_LIBRARIES: ${Pangolin_LIBRARIES}")
 message(STATUS "Pangolin_VERSION: ${Pangolin_VERSION}")
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Pangolin_LIBRARIES})
+target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${Pangolin_LIBRARIES})
 
 # realsense2
 find_package(realsense2)
 if(realsense2_FOUND)
   message(STATUS "realsense2_VERSION: ${realsense2_VERSION}")
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${realsense2_LIBRARY})
+  target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC ${realsense2_LIBRARY}) # TODO: move these to the examples only
+  set(ORB_SLAM3_DEPENDENCY_realsense2 "find_dependency(realsense2 REQUIRED)")
 endif()
 
 # Boost
 find_package(Boost REQUIRED COMPONENTS serialization)
 message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
-target_link_libraries(${PROJECT_NAME} PRIVATE ${Boost_LIBRARIES})
+target_link_libraries(${TARGET_ORB_SLAM3} PRIVATE ${Boost_LIBRARIES})
 
-# Backward
+# Backward-cpp
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-  find_package(Backward)
+  find_package(Backward REQUIRED)
   message(STATUS "BACKWARD_LIBRARIES: ${BACKWARD_LIBRARIES}")
-  target_link_libraries(${PROJECT_NAME} PUBLIC Backward::Backward)
+  target_link_libraries(${TARGET_ORB_SLAM3} PUBLIC Backward::Backward)
 endif()
-
 
 
 # Build examples
-
-# RGB-D examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
-
-add_executable(rgbd_tum
-        Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum PRIVATE ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(rgbd_realsense_D435i
-            Examples/RGB-D/rgbd_realsense_D435i.cc)
-    target_link_libraries(rgbd_realsense_D435i ${PROJECT_NAME})
-endif()
-
-
-# RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D-Inertial)
-
-if(realsense2_FOUND)
-    add_executable(rgbd_inertial_realsense_D435i
-            Examples/RGB-D-Inertial/rgbd_inertial_realsense_D435i.cc)
-    target_link_libraries(rgbd_inertial_realsense_D435i ${PROJECT_NAME})
-endif()
-
-#Stereo examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
-
-add_executable(stereo_kitti
-        Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti PRIVATE ${PROJECT_NAME})
-
-add_executable(stereo_euroc
-        Examples/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc PRIVATE ${PROJECT_NAME})
-
-add_executable(stereo_tum_vi
-        Examples/Stereo/stereo_tum_vi.cc)
-target_link_libraries(stereo_tum_vi PRIVATE ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(stereo_realsense_t265
-            Examples/Stereo/stereo_realsense_t265.cc)
-    target_link_libraries(stereo_realsense_t265 ${PROJECT_NAME})
-
-    add_executable(stereo_realsense_D435i
-            Examples/Stereo/stereo_realsense_D435i.cc)
-    target_link_libraries(stereo_realsense_D435i ${PROJECT_NAME})
-endif()
-
-#Monocular examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
-
-add_executable(mono_tum
-        Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum PRIVATE ${PROJECT_NAME})
-
-add_executable(mono_kitti
-        Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti PRIVATE ${PROJECT_NAME})
-
-add_executable(mono_euroc
-        Examples/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc PRIVATE ${PROJECT_NAME})
-
-add_executable(mono_tum_vi
-        Examples/Monocular/mono_tum_vi.cc)
-target_link_libraries(mono_tum_vi PRIVATE ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(mono_realsense_t265
-            Examples/Monocular/mono_realsense_t265.cc)
-    target_link_libraries(mono_realsense_t265 ${PROJECT_NAME})
-
-    add_executable(mono_realsense_D435i
-            Examples/Monocular/mono_realsense_D435i.cc)
-    target_link_libraries(mono_realsense_D435i ${PROJECT_NAME})
-endif()
-
-#Monocular inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular-Inertial)
-
-add_executable(mono_inertial_euroc
-        Examples/Monocular-Inertial/mono_inertial_euroc.cc)
-target_link_libraries(mono_inertial_euroc PRIVATE ${PROJECT_NAME})
-
-add_executable(mono_inertial_tum_vi
-        Examples/Monocular-Inertial/mono_inertial_tum_vi.cc)
-target_link_libraries(mono_inertial_tum_vi PRIVATE ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(mono_inertial_realsense_t265
-            Examples/Monocular-Inertial/mono_inertial_realsense_t265.cc)
-    target_link_libraries(mono_inertial_realsense_t265 ${PROJECT_NAME})
-
-    add_executable(mono_inertial_realsense_D435i
-            Examples/Monocular-Inertial/mono_inertial_realsense_D435i.cc)
-    target_link_libraries(mono_inertial_realsense_D435i ${PROJECT_NAME})
-endif()
-
-#Stereo Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial)
-
-add_executable(stereo_inertial_euroc
-        Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
-target_link_libraries(stereo_inertial_euroc PRIVATE ${PROJECT_NAME})
-
-add_executable(stereo_inertial_tum_vi
-        Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
-target_link_libraries(stereo_inertial_tum_vi PRIVATE ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(stereo_inertial_realsense_t265
-            Examples/Stereo-Inertial/stereo_inertial_realsense_t265.cc)
-    target_link_libraries(stereo_inertial_realsense_t265 ${PROJECT_NAME})
-
-    add_executable(stereo_inertial_realsense_D435i
-            Examples/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
-    target_link_libraries(stereo_inertial_realsense_D435i ${PROJECT_NAME})
-endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Calibration)
-if(realsense2_FOUND)
-    add_executable(recorder_realsense_D435i
-            Examples/Calibration/recorder_realsense_D435i.cc)
-    target_link_libraries(recorder_realsense_D435i ${PROJECT_NAME})
-
-    add_executable(recorder_realsense_T265
-            Examples/Calibration/recorder_realsense_T265.cc)
-    target_link_libraries(recorder_realsense_T265 ${PROJECT_NAME})
+if(ORB_SLAM3_BUILD_EXAMPLES)
+  add_subdirectory(Examples)
 endif()
 
 #Old examples
-
-# RGB-D examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D)
-
-add_executable(rgbd_tum_old
-        Examples_old/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum_old ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(rgbd_realsense_D435i_old
-            Examples_old/RGB-D/rgbd_realsense_D435i.cc)
-    target_link_libraries(rgbd_realsense_D435i_old ${PROJECT_NAME})
+if(ORB_SLAM3_BUILD_EXAMPLES_OLD)
+  add_subdirectory(Examples_old)
 endif()
 
 
-# RGB-D inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/RGB-D-Inertial)
+# Install
 
-if(realsense2_FOUND)
-    add_executable(rgbd_inertial_realsense_D435i_old
-            Examples_old/RGB-D-Inertial/rgbd_inertial_realsense_D435i.cc)
-    target_link_libraries(rgbd_inertial_realsense_D435i_old ${PROJECT_NAME})
+# Set standard installation directories
+set(RUNTIME_DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+set(LIBRARY_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(ARCHIVE_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDES_DESTINATION ${CMAKE_INSTALL_PREFIX}/include)
+set(INCLUDES_INSTALL_DIR ${INCLUDES_DESTINATION}/${TARGET_ORB_SLAM3})
+set(CMAKECONFIG_INSTALL_DIR ${LIBRARY_DESTINATION}/cmake/${TARGET_ORB_SLAM3})
+
+# this relative path allows installed files to be relocatable.
+file(RELATIVE_PATH REL_INCLUDE_DIR
+    "${CMAKECONFIG_INSTALL_DIR}"
+    "${INCLUDES_INSTALL_DIR}"
+)
+set(EXPORT_LIB_INC_DIRS "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}")
+set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/CameraModels")
+
+# install subprojects
+if(ORB_SLAM3_USE_OWN_DBoW2)
+    #install(FILES Thirdparty/DBoW2/lib/libDBoW2.so DESTINATION ${LIBRARY_DESTINATION})
+    install(TARGETS DBoW2 DESTINATION ${LIBRARY_DESTINATION})
+    # HACK: copy the DBoW2 headers because the own version has no package install
+    install(FILES
+        Thirdparty/DBoW2/DBoW2/BowVector.h
+        Thirdparty/DBoW2/DBoW2/FClass.h
+        Thirdparty/DBoW2/DBoW2/FeatureVector.h
+        Thirdparty/DBoW2/DBoW2/FORB.h
+        Thirdparty/DBoW2/DBoW2/ScoringObject.h
+        Thirdparty/DBoW2/DBoW2/TemplatedVocabulary.h
+        DESTINATION ${INCLUDES_DESTINATION}/DBoW2/DBoW2)
+    install(FILES
+        FILES Thirdparty/DBoW2/DUtils/Random.h
+        FILES Thirdparty/DBoW2/DUtils/Timestamp.h
+        DESTINATION ${INCLUDES_DESTINATION}/DBoW2/DUtils
+    )
+    install(TARGETS DBoW2 EXPORT ${TARGET_ORB_SLAM3}Targets)
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/../DBoW2")
+endif()
+if(ORB_SLAM3_USE_OWN_g2o)
+    #install(FILES Thirdparty/gREQUIRED2o/lib/libg2o.so DESTINATION ${LIBRARY_DESTINATION})
+    install(TARGETS g2o DESTINATION ${LIBRARY_DESTINATION})
+    # HACK: copy the DBoW2 headers because the own version has no package install
+    install(FILES "Thirdparty/g2o/config.h" DESTINATION ${INCLUDES_DESTINATION}/g2o)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/core/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/core/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/core)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/solvers/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/solvers/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/solvers)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/stuff/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/stuff/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/stuff)
+    file(GLOB g2o_HEADERS_H "Thirdparty/g2o/g2o/types/*.h")
+    file(GLOB g2o_HEADERS_HPP "Thirdparty/g2o/g2o/types/*.hpp")
+    install(FILES ${g2o_HEADERS_H} ${g2o_HEADERS_HPP} DESTINATION ${INCLUDES_DESTINATION}/g2o/g2o/types)
+    install(TARGETS g2o EXPORT ${TARGET_ORB_SLAM3}Targets)
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/../g2o")
+endif()
+if(ORB_SLAM3_USE_OWN_Sophus)
+    install(TARGETS sophus DESTINATION ${LIBRARY_DESTINATION})
+    set(EXPORT_LIB_INC_DIRS ${EXPORT_LIB_INC_DIRS} "\${PROJECT_CMAKE_DIR}/${REL_INCLUDE_DIR}/..")
 endif()
 
-#Stereo examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo)
+# install headers
+file(GLOB ORB_SLAM3_HEADERS "include/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR})
+file(GLOB ORB_SLAM3_HEADERS "include/CameraModels/*.h")
+install(FILES ${ORB_SLAM3_HEADERS} DESTINATION ${INCLUDES_INSTALL_DIR}/CameraModels)
 
-add_executable(stereo_kitti_old
-        Examples_old/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti_old ${PROJECT_NAME})
+# install libraries
+install(TARGETS ${TARGET_ORB_SLAM3}
+    EXPORT ${TARGET_ORB_SLAM3}Targets
+    RUNTIME DESTINATION ${RUNTIME_DESTINATION}
+    LIBRARY DESTINATION ${LIBRARY_DESTINATION}
+    ARCHIVE DESTINATION ${ARCHIVE_DESTINATION}
+    INCLUDES DESTINATION ${INCLUDES_DESTINATION}
+)
 
-add_executable(stereo_euroc_old
-        Examples_old/Stereo/stereo_euroc.cc)
-target_link_libraries(stereo_euroc_old ${PROJECT_NAME})
+# write package config files
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}ConfigVersion.cmake"
+    VERSION 1.0
+    COMPATIBILITY AnyNewerVersion
+)
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/ORB_SLAM3Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
+    INSTALL_DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
+install(EXPORT ${TARGET_ORB_SLAM3}Targets
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR})
+install(FILES "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}ConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/${TARGET_ORB_SLAM3}Config.cmake"
+    DESTINATION ${CMAKECONFIG_INSTALL_DIR}
+)
 
-add_executable(stereo_tum_vi_old
-        Examples_old/Stereo/stereo_tum_vi.cc)
-target_link_libraries(stereo_tum_vi_old ${PROJECT_NAME})
 
-if(realsense2_FOUND)
-    add_executable(stereo_realsense_t265_old
-            Examples_old/Stereo/stereo_realsense_t265.cc)
-    target_link_libraries(stereo_realsense_t265_old ${PROJECT_NAME})
-
-    add_executable(stereo_realsense_D435i_old
-            Examples_old/Stereo/stereo_realsense_D435i.cc)
-    target_link_libraries(stereo_realsense_D435i_old ${PROJECT_NAME})
-endif()
-
-#Monocular examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular)
-
-add_executable(mono_tum_old
-        Examples_old/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum_old ${PROJECT_NAME})
-
-add_executable(mono_kitti_old
-        Examples_old/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti_old ${PROJECT_NAME})
-
-add_executable(mono_euroc_old
-        Examples_old/Monocular/mono_euroc.cc)
-target_link_libraries(mono_euroc_old ${PROJECT_NAME})
-
-add_executable(mono_tum_vi_old
-        Examples_old/Monocular/mono_tum_vi.cc)
-target_link_libraries(mono_tum_vi_old ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(mono_realsense_t265_old
-            Examples_old/Monocular/mono_realsense_t265.cc)
-    target_link_libraries(mono_realsense_t265_old ${PROJECT_NAME})
-
-    add_executable(mono_realsense_D435i_old
-            Examples_old/Monocular/mono_realsense_D435i.cc)
-    target_link_libraries(mono_realsense_D435i_old ${PROJECT_NAME})
-endif()
-
-#Monocular inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Monocular-Inertial)
-
-add_executable(mono_inertial_euroc_old
-        Examples_old/Monocular-Inertial/mono_inertial_euroc.cc)
-target_link_libraries(mono_inertial_euroc_old ${PROJECT_NAME})
-
-add_executable(mono_inertial_tum_vi_old
-        Examples_old/Monocular-Inertial/mono_inertial_tum_vi.cc)
-target_link_libraries(mono_inertial_tum_vi_old ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(mono_inertial_realsense_t265_old
-            Examples_old/Monocular-Inertial/mono_inertial_realsense_t265.cc)
-    target_link_libraries(mono_inertial_realsense_t265_old ${PROJECT_NAME})
-
-    add_executable(mono_inertial_realsense_D435i_old
-            Examples_old/Monocular-Inertial/mono_inertial_realsense_D435i.cc)
-    target_link_libraries(mono_inertial_realsense_D435i_old ${PROJECT_NAME})
-endif()
-
-#Stereo Inertial examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples_old/Stereo-Inertial)
-
-add_executable(stereo_inertial_euroc_old
-        Examples_old/Stereo-Inertial/stereo_inertial_euroc.cc)
-target_link_libraries(stereo_inertial_euroc_old ${PROJECT_NAME})
-
-add_executable(stereo_inertial_tum_vi_old
-        Examples_old/Stereo-Inertial/stereo_inertial_tum_vi.cc)
-target_link_libraries(stereo_inertial_tum_vi_old ${PROJECT_NAME})
-
-if(realsense2_FOUND)
-    add_executable(stereo_inertial_realsense_t265_old
-            Examples_old/Stereo-Inertial/stereo_inertial_realsense_t265.cc)
-    target_link_libraries(stereo_inertial_realsense_t265_old ${PROJECT_NAME})
-
-    add_executable(stereo_inertial_realsense_D435i_old
-            Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
-    target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
-endif()
+# TODO: extract and copy the vocabulary into the bin folder

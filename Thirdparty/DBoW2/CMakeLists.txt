@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 set(DBOW2_TARGET "DBoW2")
 project(${DBOW2_TARGET})
 
